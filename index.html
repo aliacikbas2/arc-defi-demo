@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StableLab — Arc Testnet DeFi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fa;
+    --surface:#ffffff;
+    --surface-alt:#eef2f8;
+    --border:#dde3ec;
+    --text:#0f1b2d;
+    --text-mute:#5b6b82;
+    --text-faint:#8a97ab;
+    --primary:#2f5fe0;
+    --primary-dark:#1e3fa8;
+    --primary-soft:#e8edfc;
+    --ok:#0f9d58;
+    --err:#d33b2c;
+    --radius:10px;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--primary);}
+  .wrap{max-width:960px;margin:0 auto;padding:24px 20px 80px;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding:8px 0 24px;
+    flex-wrap:wrap; gap:16px;
+  }
+  .brand{display:flex;flex-direction:column;gap:8px;}
+  .brand .tag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; font-weight:600; letter-spacing:.02em; color:var(--primary);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:var(--sans); font-weight:800; font-size:28px; margin:0;
+    letter-spacing:-0.02em; color:var(--text);
+  }
+  h1 .slash{color:var(--primary);}
+  .subtitle{color:var(--text-mute); font-size:13px; max-width:44ch; line-height:1.55;}
+
+  .toprow{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+  .langbar{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:4px; max-width:280px;}
+  .langbar button{
+    font-family:var(--sans); font-size:11px; font-weight:600; letter-spacing:.02em;
+    background:var(--surface); border:1px solid var(--border); border-radius:6px;
+    padding:5px 9px; cursor:pointer; color:var(--text-mute);
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .langbar button:hover{ border-color:var(--primary); color:var(--primary); }
+  .langbar button.active{background:var(--primary); color:#fff; border-color:var(--primary);}
+
+  #connectBtn{
+    font-family:var(--sans); font-weight:600; font-size:13px;
+    background:var(--primary); color:#fff;
+    border:none; border-radius:8px; padding:10px 18px;
+    cursor:pointer; letter-spacing:.01em;
+    box-shadow:0 1px 2px rgba(15,27,45,0.08);
+    transition:background .12s;
+  }
+  #connectBtn:hover{background:var(--primary-dark);}
+  #connectBtn:disabled{opacity:.6;cursor:default;}
+  .act{
+    font-family:var(--sans); font-size:12.5px; font-weight:600;
+    background:var(--surface); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:9px 14px; cursor:pointer;
+    transition:background .12s, border-color .12s;
+  }
+  .act:hover{background:var(--surface-alt); border-color:var(--primary);}
+  .act.primary{background:var(--primary); color:#fff; border-color:var(--primary);}
+  .act.primary:hover{background:var(--primary-dark);}
+  .act:disabled{opacity:.4; cursor:default;}
+
+  .acct{ font-size:11.5px; color:var(--text-mute); text-align:right; font-family:var(--mono); }
+  .acct .netbadge{
+    display:inline-block; margin-top:4px; padding:3px 9px; border-radius:20px;
+    border:1px solid var(--ok); font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.04em; color:var(--ok); background:rgba(15,157,88,0.08);
+  }
+  .acct .netbadge.bad{border-color:var(--err); color:var(--err); background:rgba(211,59,44,0.08);}
+
+  .about-box{
+    border-radius:var(--radius); background:var(--primary-soft); padding:16px 20px; margin-bottom:24px;
+    border:1px solid #d3ddfa;
+  }
+  .about-title{
+    font-weight:700; font-size:13.5px; margin-bottom:5px; color:var(--primary-dark);
+  }
+  .about-text{ font-size:12.5px; color:#33447a; line-height:1.6; max-width:70ch; }
+
+  .balances-wrap{ margin-bottom:24px; }
+  .balances{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:12px;
+  }
+  .balcell{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; box-shadow:0 1px 2px rgba(15,27,45,0.04);
+  }
+  .balcell .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint); font-weight:600;}
+  .balcell .val{
+    font-family:var(--sans); font-size:24px; font-weight:700; margin-top:6px; color:var(--text);
+    letter-spacing:-0.01em;
+  }
+  .balances-wrap #btnRefresh{ margin-top:12px; }
+
+  .section{
+    border:1px solid var(--border); border-radius:var(--radius);
+    margin-bottom:16px; background:var(--surface);
+    box-shadow:0 1px 2px rgba(15,27,45,0.04);
+    overflow:hidden;
+  }
+  .section .head{
+    display:flex; align-items:center; gap:10px;
+    padding:14px 20px; border-bottom:1px solid var(--border);
+    background:var(--surface-alt);
+  }
+  .section .head .n{
+    display:none;
+  }
+  .section .head h2{
+    font-size:15px; margin:0; font-weight:700; color:var(--text);
+  }
+  .section .head .desc{
+    margin-left:auto; font-size:11.5px; color:var(--text-mute); text-align:right;
+  }
+  .body{padding:20px;}
+  .row{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;
+  }
+  .row:last-child{margin-bottom:0;}
+  input[type=text], input[type=number]{
+    font-family:var(--sans); font-size:13.5px;
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:10px 13px; flex:1; min-width:140px; color:var(--text);
+    transition:border-color .12s;
+  }
+  input[type=text]:focus, input[type=number]:focus{
+    outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft);
+  }
+  input::placeholder{color:var(--text-faint);}
+  .hint{font-size:11.5px;color:var(--text-faint);margin-top:10px;}
+  .stat-line{
+    display:flex; justify-content:space-between; font-size:12.5px; padding:8px 0;
+    border-bottom:1px solid var(--surface-alt);
+  }
+  .stat-line:last-of-type{border-bottom:none;}
+  .stat-line .k{color:var(--text-mute);}
+  .stat-line .v{font-weight:700; color:var(--text); font-family:var(--mono); font-size:12px;}
+
+  .toggle{display:flex; gap:4px; width:fit-content; margin-bottom:16px; background:var(--surface-alt); padding:4px; border-radius:9px;}
+  .toggle button{
+    font-family:var(--sans); font-size:12px; font-weight:600;
+    background:transparent; border:none; border-radius:6px; padding:7px 14px; cursor:pointer; color:var(--text-mute);
+    transition:background .12s, color .12s;
+  }
+  .toggle button.active{background:var(--surface); color:var(--primary); box-shadow:0 1px 2px rgba(15,27,45,0.08);}
+
+  #log{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+    background:var(--text); color:#fff; border-radius:8px;
+    font-size:12.5px; padding:11px 20px; display:none; z-index:50;
+    box-shadow:0 4px 16px rgba(15,27,45,0.25); max-width:90vw;
+  }
+  #log.show{display:block;}
+  #log.err{background:var(--err);}
+  #log.ok{background:var(--ok);}
+
+  .lbtable{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .lbtable th{
+    text-align:left; text-transform:uppercase; letter-spacing:.04em; font-size:10.5px; font-weight:700;
+    color:var(--text-faint); padding:8px 10px; border-bottom:1px solid var(--border);
+  }
+  .lbtable td{padding:9px 10px; border-bottom:1px solid var(--surface-alt); font-family:var(--mono); font-size:12px;}
+  .lbtable tr:last-child td{border-bottom:none;}
+  .lbtable .rank{font-family:var(--sans); font-weight:700; color:var(--primary);}
+  .lbtable .addr{font-family:var(--mono);}
+  .lbtable .you{background:var(--primary-soft);}
+  .lbloading{font-size:12px; color:var(--text-faint); padding:8px 0;}
+
+  footer{
+    margin-top:32px; padding-top:16px; border-top:1px solid var(--border);
+    font-size:11px; color:var(--text-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  footer code{background:var(--surface-alt); padding:2px 6px; border-radius:4px; font-family:var(--mono);}
+
+  @media (max-width:560px){
+    h1{font-size:24px;}
+    header{flex-direction:column; align-items:flex-start;}
+    .toprow{align-items:flex-start;}
+    .langbar{justify-content:flex-start;}
+    .acct{text-align:left;}
+  }
+
+  .feature-strip{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
+  }
+  .feature-chip{
+    display:inline-flex; align-items:center; gap:7px;
+    background:var(--surface); border:1px solid #d3ddfa; border-radius:20px;
+    padding:6px 13px; font-size:11.5px; font-weight:600; color:var(--primary-dark);
+    text-decoration:none; transition:background .12s, transform .12s;
+  }
+  .feature-chip:hover{background:var(--primary-soft); transform:translateY(-1px);}
+  .fc-dot{width:6px; height:6px; border-radius:50%; background:var(--primary); flex-shrink:0;}
+
+  .layout{ display:flex; gap:24px; align-items:flex-start; }
+  .sidenav{
+    position:sticky; top:20px; flex:0 0 168px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .sidenav a{
+    display:block; padding:9px 12px; border-radius:8px;
+    font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none;
+    border-left:2px solid transparent;
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .sidenav a:hover{background:var(--surface-alt); color:var(--text);}
+  .sidenav a.active{background:var(--primary-soft); color:var(--primary-dark); border-left-color:var(--primary);}
+  .content{ flex:1; min-width:0; }
+
+  @media (max-width:760px){
+    .layout{ flex-direction:column; }
+    .sidenav{
+      position:static; flex-direction:row; overflow-x:auto; gap:6px;
+      width:100%; padding-bottom:4px; flex:none;
+    }
+    .sidenav a{ white-space:nowrap; border-left:none; border-bottom:2px solid transparent; }
+    .sidenav a.active{ border-left-color:transparent; border-bottom-color:var(--primary); }
+  }
+
+  .group-menu{
+    position:relative; display:inline-block; margin:22px 0 10px;
+  }
+  .group-label{
+    cursor:pointer; display:flex; align-items:center; gap:5px;
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--text-faint);
+  }
+  .group-label:hover{ color:var(--primary); }
+  .group-label::before{
+    content:"›"; display:inline-block; transform:rotate(90deg); font-size:13px; transition:transform .15s;
+  }
+  .group-menu:hover .group-label::before{ transform:rotate(180deg); }
+  .group-dropdown{
+    position:absolute; left:0; top:100%; margin-top:6px; min-width:210px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    box-shadow:0 6px 20px rgba(15,27,45,0.14); padding:6px; z-index:20;
+    opacity:0; pointer-events:none; transform:translateY(-4px); transition:opacity .15s, transform .15s;
+  }
+  .group-menu:hover .group-dropdown{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  .group-dropdown a{
+    display:block; padding:8px 12px; border-radius:7px; font-size:12.5px; font-weight:600;
+    color:var(--text); text-decoration:none; text-transform:none; letter-spacing:normal;
+  }
+  .group-dropdown a:hover{ background:var(--primary-soft); color:var(--primary-dark); }
+
+  #corporateOnly{ display:block; }
+
+  .teaser-card{
+    display:block; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+    padding:16px 20px; margin-bottom:12px; text-decoration:none; box-shadow:0 1px 2px rgba(15,27,45,0.04);
+    transition:border-color .12s, transform .12s;
+  }
+  .teaser-card:hover{ border-color:var(--primary); transform:translateX(2px); }
+  .teaser-title{ font-weight:700; font-size:14.5px; color:var(--text); margin-bottom:4px; }
+  .teaser-desc{ font-size:12.5px; color:var(--text-mute); line-height:1.5; margin-bottom:8px; }
+  .teaser-link{ font-size:12px; font-weight:700; color:var(--primary); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="tag" data-i18n="tag"></div>
+      <h1>Stable<span class="slash">Lab</span></h1>
+      <div class="subtitle" data-i18n="subtitle"></div>
+    </div>
+    <div class="toprow">
+      <div class="langbar" id="langbar">
+        <button data-lang="tr">TR</button>
+        <button data-lang="en">EN</button>
+        <button data-lang="es">ES</button>
+        <button data-lang="de">DE</button>
+        <button data-lang="zh">中文</button>
+        <button data-lang="hi">हिं</button>
+        <button data-lang="fr">FR</button>
+        <button data-lang="sw">SW</button>
+      </div>
+      <button id="connectBtn" data-i18n="connect"></button>
+      <button id="switchNetBtn" class="act" style="display:none;" data-i18n="switchNetBtn"></button>
+      <div class="acct" id="acctInfo"></div>
+    </div>
+  </header>
+
+  <div class="about-box">
+    <div class="about-title" data-i18n="aboutTitle"></div>
+    <div class="about-text" data-i18n="aboutText"></div>
+    <div class="feature-strip">
+      <a href="#sec-faucet" class="feature-chip"><span class="fc-dot"></span><span data-i18n="faucetTitle"></span></a>
+      <a href="#sec-staking" class="feature-chip"><span class="fc-dot"></span><span data-i18n="stakingTitle"></span></a>
+      <a href="#sec-lending" class="feature-chip"><span class="fc-dot"></span><span data-i18n="lendingTitle"></span></a>
+      <a href="#sec-swap" class="feature-chip"><span class="fc-dot"></span><span data-i18n="swapTitle"></span></a>
+      <a href="./streaming/" class="feature-chip"><span class="fc-dot"></span><span data-i18n="streamTitle"></span></a>
+      <a href="./escrow/" class="feature-chip"><span class="fc-dot"></span><span data-i18n="escrowTitle"></span></a>
+      <a href="#sec-multisig" class="feature-chip"><span class="fc-dot"></span><span data-i18n="msigTitle"></span></a>
+    </div>
+  </div>
+
+  <div class="balances-wrap">
+    <div class="balances">
+      <div class="balcell"><div class="lbl" data-i18n="balArc"></div><div class="val" id="balARC">—</div></div>
+      <div class="balcell"><div class="lbl" data-i18n="balUsd"></div><div class="val" id="balUSD">—</div></div>
+      <div class="balcell"><div class="lbl" data-i18n="balStaked"></div><div class="val" id="balStaked">—</div></div>
+      <div class="balcell"><div class="lbl" data-i18n="balReward"></div><div class="val" id="balReward">—</div></div>
+    </div>
+    <button id="btnRefresh" class="act" data-i18n="refreshBtn"></button>
+  </div>
+
+  <div class="layout">
+    <nav class="sidenav" id="sidenav">
+      <a href="#sec-faucet" data-target="sec-faucet" data-i18n="faucetTitle"></a>
+      <a href="#sec-staking" data-target="sec-staking" data-i18n="stakingTitle"></a>
+      <a href="#sec-lending" data-target="sec-lending" data-i18n="lendingTitle"></a>
+      <a href="#sec-swap" data-target="sec-swap" data-i18n="swapTitle"></a>
+      <a href="./streaming/" data-i18n="streamTitle"></a>
+      <a href="./escrow/" data-i18n="escrowTitle"></a>
+      <a href="#sec-multisig" data-target="sec-multisig" data-i18n="msigTitle"></a>
+    </nav>
+    <div class="content">
+
+  <!-- FAUCET -->
+  <div class="section" id="sec-faucet">
+    <div class="head">
+      <h2 data-i18n="faucetTitle"></h2>
+      <span class="desc" data-i18n="faucetDesc"></span>
+    </div>
+    <div class="body">
+      <div class="row">
+        <button class="act primary" id="btnClaim" data-i18n="claimBtn"></button>
+        <span class="hint" id="claimStatus"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="group-menu">
+    <div class="group-label" data-i18n="groupCore"></div>
+    <div class="group-dropdown">
+      <a href="#sec-staking" data-i18n="stakingTitle"></a>
+      <a href="#sec-lending" data-i18n="lendingTitle"></a>
+      <a href="#sec-swap" data-i18n="swapTitle"></a>
+    </div>
+  </div>
+
+  <!-- STAKING -->
+  <div class="section" id="sec-staking">
+    <div class="head">
+      <h2 data-i18n="stakingTitle"></h2>
+      <span class="desc" data-i18n="stakingDesc"></span>
+    </div>
+    <div class="body">
+      <div class="row">
+        <input type="number" id="stakeAmt" data-i18n-ph="amountArc" />
+        <button class="act primary" id="btnStake" data-i18n="stakeBtn"></button>
+        <button class="act" id="btnUnstake" data-i18n="unstakeBtn"></button>
+      </div>
+      <div class="stat-line"><span class="k" data-i18n="yourStaked"></span><span class="v" id="stStaked">—</span></div>
+      <div class="stat-line"><span class="k" data-i18n="pendingReward"></span><span class="v" id="stReward">—</span></div>
+      <div class="hint" data-i18n="stakeHint"></div>
+    </div>
+  </div>
+
+  <!-- LENDING -->
+  <div class="section" id="sec-lending">
+    <div class="head">
+      <h2 data-i18n="lendingTitle"></h2>
+      <span class="desc" data-i18n="lendingDesc"></span>
+    </div>
+    <div class="body">
+      <div class="row">
+        <input type="number" id="collAmt" data-i18n-ph="collateralAmount" />
+        <button class="act primary" id="btnDeposit" data-i18n="depositBtn"></button>
+        <button class="act" id="btnWithdraw" data-i18n="withdrawBtn"></button>
+      </div>
+      <div class="row">
+        <input type="number" id="borrowAmt" data-i18n-ph="amountArc" />
+        <button class="act primary" id="btnBorrow" data-i18n="borrowBtn"></button>
+        <button class="act" id="btnRepay" data-i18n="repayBtn"></button>
+      </div>
+      <div class="stat-line"><span class="k" data-i18n="yourCollateral"></span><span class="v" id="lnColl">—</span></div>
+      <div class="stat-line"><span class="k" data-i18n="yourDebt"></span><span class="v" id="lnBorrow">—</span></div>
+      <div class="stat-line"><span class="k" data-i18n="maxBorrow"></span><span class="v" id="lnMax">—</span></div>
+    </div>
+  </div>
+
+  <!-- SWAP -->
+  <div class="section" id="sec-swap">
+    <div class="head">
+      <h2 data-i18n="swapTitle"></h2>
+      <span class="desc" data-i18n="swapDesc"></span>
+    </div>
+    <div class="body">
+      <div class="toggle">
+        <button id="dirAtoB" class="active">tARC → tUSD</button>
+        <button id="dirBtoA">tUSD → tARC</button>
+      </div>
+      <div class="row">
+        <input type="number" id="swapAmt" data-i18n-ph="amountToGive" />
+        <button class="act primary" id="btnSwap" data-i18n="swapBtn"></button>
+      </div>
+      <div class="stat-line"><span class="k" data-i18n="youWillGet"></span><span class="v" id="swapPreview">—</span></div>
+      <div class="stat-line"><span class="k" data-i18n="poolArc"></span><span class="v" id="swReserveA">—</span></div>
+      <div class="stat-line"><span class="k" data-i18n="poolUsd"></span><span class="v" id="swReserveB">—</span></div>
+      <div class="hint" data-i18n="swapHint"></div>
+    </div>
+  </div>
+
+  <div id="corporateOnly">
+    <div class="group-menu">
+      <div class="group-label" data-i18n="groupTreasury"></div>
+      <div class="group-dropdown">
+        <a href="./streaming/" data-i18n="streamTitle"></a>
+        <a href="./escrow/" data-i18n="escrowTitle"></a>
+        <a href="#sec-multisig" data-i18n="msigTitle"></a>
+      </div>
+    </div>
+
+    <!-- STREAMING (teaser) -->
+    <a class="teaser-card" href="./streaming/">
+      <div class="teaser-title" data-i18n="streamTitle"></div>
+      <div class="teaser-desc" data-i18n="streamDesc"></div>
+      <div class="teaser-link" data-i18n="teaserLink"></div>
+    </a>
+
+    <!-- ESCROW (teaser) -->
+    <a class="teaser-card" href="./escrow/">
+      <div class="teaser-title" data-i18n="escrowTitle"></div>
+      <div class="teaser-desc" data-i18n="escrowDesc"></div>
+      <div class="teaser-link" data-i18n="teaserLink"></div>
+    </a>
+
+    <!-- MULTISIG -->
+    <div class="section" id="sec-multisig">
+      <div class="head">
+        <h2 data-i18n="msigTitle"></h2>
+        <span class="desc" data-i18n="msigDesc"></span>
+      </div>
+      <div class="body">
+        <div class="row">
+          <input type="number" id="msigDepositAmt" data-i18n-ph="amountArc" />
+          <button class="act primary" id="btnMsigDeposit" data-i18n="depositBtn"></button>
+        </div>
+        <div class="row">
+          <input type="text" id="msigTo" data-i18n-ph="recipientAddr" />
+          <input type="number" id="msigAmount" data-i18n-ph="amountArc" />
+          <button class="act primary" id="btnMsigPropose" data-i18n="proposeBtn"></button>
+        </div>
+        <div class="row" style="margin-top:14px;">
+          <input type="number" id="msigProposalId" data-i18n-ph="proposalId" />
+          <button class="act" id="btnMsigCheck" data-i18n="checkBtn"></button>
+          <button class="act primary" id="btnMsigConfirm" data-i18n="confirmBtn"></button>
+        </div>
+        <div class="stat-line"><span class="k" data-i18n="msigRequired"></span><span class="v" id="msigRequiredVal">—</span></div>
+        <div class="stat-line"><span class="k" data-i18n="msigProposalInfo"></span><span class="v" id="msigProposalVal">—</span></div>
+        <div class="hint" data-i18n="msigHint"></div>
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <span>Arc Network Testnet · Chain ID <code>5042002</code></span>
+    <span>tARC <code>0xc59b…6811E</code> · tUSD <code>0xb0A5…4BFD</code> · Staking <code>0x4AC9…AB93</code> · Lending <code>0xB110…3774</code> · Swap <code>0x8d6A…9613</code></span>
+  </footer>
+
+</div>
+
+<div id="log"></div>
+
+<script>
+/* ---------- i18n ---------- */
+const I18N = {
+  tr: {
+    tag: "Stablecoin Rayları Üzerinde, Uçtan Uca · Arc Testnet",
+    aboutTitle: "StableLab Hakkında",
+    aboutText: "StableLab, Arc Network Testnet üzerinde stablecoin altyapısının farklı bileşenlerini (stake, borç ver/al, takas, test token musluğu ve daha fazlası) tek bir arayüzde bir araya getiren, sıfırdan geliştirilmiş açık kaynaklı bir deney projesidir. Zamanla yeni modüller eklenerek büyütülüyor.",
+
+    invalidAddr: "Geçerli bir cüzdan adresi gir.",
+    streamTitle: "Payment Streaming", streamDesc: "Zaman içinde saniye saniye akan ödeme gönder",
+    recipientAddr: "Alıcı adresi (0x...)", totalAmount: "Toplam miktar (tARC)", durationSec: "Süre (saniye)",
+    createStreamBtn: "Akış Başlat", streamCreateHint: "Örnek: 3600 saniyede 100 tARC akıtmak için süreye 3600 yaz.",
+    streamId: "Akış ID", checkBtn: "Sorgula", withdrawStreamBtn: "Hak Edileni Çek", cancelStreamBtn: "Akışı İptal Et",
+    withdrawableNow: "Şu an çekilebilir miktar", streamHint: "Akış ID'sini not al — sorgulama ve çekme işlemleri için gerekli.",
+    streamLabel: "ödeme akışı", streamCreating: "Akış oluşturuluyor…", streamCreated: "Ödeme akışı oluşturuldu.",
+    streamWithdrawing: "Hak edilen miktar çekiliyor…", streamWithdrawOk: "Çekme işlemi başarılı.",
+    streamCancelling: "Akış iptal ediliyor…", streamCancelOk: "Akış iptal edildi.",
+    escrowTitle: "Escrow", escrowDesc: "Üçüncü kişi onayına bağlı şartlı transfer",
+    beneficiaryAddr: "Alıcı (beneficiary) adresi", arbiterAddr: "Hakem (arbiter) adresi",
+    createDealBtn: "Anlaşma Oluştur", escrowCreateHint: "Miktar kilitlenir; hakem ya da sen serbest bırakana/iade edene kadar bekler.",
+    dealId: "Anlaşma ID", releaseBtn: "Serbest Bırak (Alıcıya)", refundBtn: "İade Et (Gönderene)",
+    dealStatus: "Anlaşma durumu", escrowHint: "Serbest bırakma: gönderen ya da hakem yapabilir. İade: alıcı ya da hakem yapabilir.",
+    escrowLabel: "escrow anlaşması", dealCreating: "Anlaşma oluşturuluyor…", dealCreated: "Anlaşma oluşturuldu.",
+    dealReleasing: "Serbest bırakılıyor…", dealReleased: "Serbest bırakıldı.",
+    dealRefunding: "İade ediliyor…", dealRefunded: "İade edildi.",
+    msigTitle: "Multi-sig Cüzdan", msigDesc: "Birden fazla onayla çalışan ortak kasa",
+    proposeBtn: "Teklif Oluştur", proposalId: "Teklif ID", confirmBtn: "Onayla",
+    msigRequired: "Gereken onay sayısı", msigProposalInfo: "Teklif bilgisi",
+    msigHint: "Önce kasaya yatır (deposit), sonra bir transfer teklif et, yeterli onay toplanınca otomatik gerçekleşir.",
+    msigLabel: "multi-sig kasa", msigDepositing: "Kasaya yatırılıyor…", msigDepositOk: "Yatırma başarılı.",
+    msigProposing: "Teklif gönderiliyor…", msigProposed: "Teklif oluşturuldu.",
+    msigConfirming: "Onaylanıyor…", msigConfirmed: "Onaylandı.",
+    badgesTitle: "Rozetler", badgesDesc: "Etkinliklerine göre kazandığın rozetler",
+    badgeFaucetBtn: "Faucet Rozeti Al", badgeStakerBtn: "Staker Rozeti Al", badgeBorrowerBtn: "Borrower Rozeti Al",
+    badgeFaucetLbl: "Faucet Rozeti", badgeStakerLbl: "Staker Rozeti", badgeBorrowerLbl: "Borrower Rozeti",
+    badgesHint: "Her rozeti sadece ilgili işlemi (faucet/stake/borç) en az bir kez yaptıysan alabilirsin.",
+    badgeClaiming: "Rozet talep ediliyor…", badgeClaimed: "Rozet kazanıldı.",    subtitle: "Stake, borç ver/al ve takas et — beş kontrat, tek arayüz. Gerçek para değildir, Arc Network Testnet üzerinde çalışır.",
+    connect: "Cüzdanı Bağla", connected: "Bağlandı", wrongNetwork: "Yanlış ağ — Arc Testnet seçin", onArc: "Arc Testnet",
+    balArc: "tARC bakiyesi", balUsd: "tUSD bakiyesi", balStaked: "Stake edilmiş", balReward: "Bekleyen ödül", refreshBtn: "Yenile", switchNetBtn: "Arc Testnet'e Geç",
+    faucetTitle: "Testnet Faucet", faucetDesc: "Kişi başı 100 tARC + 100 tUSD, 24 saatte bir",
+    groupCore: "Temel Araçlar", groupTreasury: "Hazine ve Ödeme Araçları", teaserLink: "İncele →", previewCore: "Staking · Lending · Swap", previewTreasury: "Payment Streaming · Escrow · Multi-sig Cüzdan",
+    claimBtn: "Test Token Al", claiming: "Test token talep ediliyor…", claimOk: "100 tARC + 100 tUSD hesabına gönderildi.",
+    claimWait: "Tekrar talep edebilmen için kalan süre: ", claimReady: "Şu an talep edebilirsin.",
+    hoursShort: "sa", minutesShort: "dk",
+    stakingTitle: "Staking", stakingDesc: "tARC kilitle, saniye başına ödül kazan",
+    amountArc: "Miktar (tARC)", stakeBtn: "Stake Et", unstakeBtn: "Unstake Et (tümü)",
+    yourStaked: "Stake edilmiş bakiyen", pendingReward: "Şu anki bekleyen ödül",
+    stakeHint: "Stake etmeden önce kontrata harcama izni (approve) otomatik istenir.",
+    lendingTitle: "Lending", lendingDesc: "Teminat yatır, %66'ya kadar borç al",
+    collateralAmount: "Teminat miktarı (tARC)", depositBtn: "Teminat Yatır", withdrawBtn: "Teminatı Geri Çek",
+    borrowBtn: "Borç Al", repayBtn: "Borcu Öde",
+    yourCollateral: "Teminat bakiyen", yourDebt: "Borcun", maxBorrow: "Maksimum borç alabileceğin (%66)",
+    swapTitle: "Swap", swapDesc: "tARC ⇄ tUSD, x·y=k havuzu, %0.3 komisyon",
+    amountToGive: "Verilecek miktar", swapBtn: "Takas Et",
+    youWillGet: "Alacağın miktar", poolArc: "Havuzdaki tARC", poolUsd: "Havuzdaki tUSD",
+    swapHint: "Takastan önce ilgili token için harcama izni otomatik istenir.",
+    lbTitle: "Liderlik Tablosu", lbDesc: "En aktif cüzdanlar (stake, borç, takas, test token)", lbSortCount: "İşlem Sayısı", lbSortVolume: "İşlem Hacmi", lbSortReward: "Ödül Miktarı", lbColVolume: "Hacim (tARC+tUSD)", lbColReward: "Ödül (tARC)",
+    lbLoading: "Zincirden işlemler okunuyor…", lbRank: "Sıra", lbWallet: "Cüzdan", lbActions: "İşlem Sayısı",
+    lbYou: " (sen)",
+    noWallet: "Tarayıcıda bir cüzdan uzantısı bulunamadı (Rabby/MetaMask).",
+    connErr: "Bağlantı hatası: ", invalidAmt: "Geçerli bir miktar gir.",
+    approvingFor: " için izin isteniyor (approve)…",
+    sendingStake: "Stake işlemi gönderiliyor…", stakeOk: "Stake başarılı.",
+    sendingUnstake: "Unstake işlemi gönderiliyor…", unstakeOk: "Unstake başarılı.",
+    depositing: "Teminat yatırılıyor…", depositOk: "Teminat yatırıldı.",
+    withdrawing: "Teminat geri çekiliyor…", withdrawOk: "Teminat geri çekildi.",
+    borrowing: "Borç alınıyor…", borrowOk: "Borç alındı.",
+    repaying: "Borç ödeniyor…", repayOk: "Borç ödendi.",
+    swappingAB: "Takas gönderiliyor (tARC → tUSD)…", swappingBA: "Takas gönderiliyor (tUSD → tARC)…",
+    swapOk: "Takas başarılı.", txFailed: "İşlem başarısız: ",
+    stakeLabel: "Stake", depositLabel: "Teminat yatırma", repayLabel: "Borç ödeme",
+    swapALabel: "Swap (tARC)", swapBLabel: "Swap (tUSD)"
+  },
+  en: {
+    tag: "Built on Stablecoin Rails, End to End · Arc Testnet",
+    aboutTitle: "About StableLab",
+    aboutText: "StableLab is an open-source experiment built from scratch on Arc Network Testnet, bringing together different stablecoin infrastructure building blocks (staking, lending/borrowing, swapping, a test-token faucet, and more) into a single interface. It keeps growing with new modules over time.",
+
+    invalidAddr: "Enter a valid wallet address.",
+    streamTitle: "Payment Streaming", streamDesc: "Send a payment that flows second by second over time",
+    recipientAddr: "Recipient address (0x...)", totalAmount: "Total amount (tARC)", durationSec: "Duration (seconds)",
+    createStreamBtn: "Start Stream", streamCreateHint: "Example: to stream 100 tARC over 3600 seconds, enter 3600 for duration.",
+    streamId: "Stream ID", checkBtn: "Check", withdrawStreamBtn: "Withdraw Earned", cancelStreamBtn: "Cancel Stream",
+    withdrawableNow: "Currently withdrawable amount", streamHint: "Note down the Stream ID — needed for checking and withdrawing.",
+    streamLabel: "payment stream", streamCreating: "Creating stream…", streamCreated: "Payment stream created.",
+    streamWithdrawing: "Withdrawing earned amount…", streamWithdrawOk: "Withdrawal successful.",
+    streamCancelling: "Cancelling stream…", streamCancelOk: "Stream cancelled.",
+    escrowTitle: "Escrow", escrowDesc: "Conditional transfer requiring third-party approval",
+    beneficiaryAddr: "Beneficiary address", arbiterAddr: "Arbiter address",
+    createDealBtn: "Create Deal", escrowCreateHint: "Amount gets locked; it waits until you or the arbiter releases or refunds it.",
+    dealId: "Deal ID", releaseBtn: "Release (to Beneficiary)", refundBtn: "Refund (to Depositor)",
+    dealStatus: "Deal status", escrowHint: "Release: depositor or arbiter can do it. Refund: beneficiary or arbiter can do it.",
+    escrowLabel: "escrow deal", dealCreating: "Creating deal…", dealCreated: "Deal created.",
+    dealReleasing: "Releasing…", dealReleased: "Released.",
+    dealRefunding: "Refunding…", dealRefunded: "Refunded.",
+    msigTitle: "Multi-sig Wallet", msigDesc: "A shared vault requiring multiple confirmations",
+    proposeBtn: "Create Proposal", proposalId: "Proposal ID", confirmBtn: "Confirm",
+    msigRequired: "Required confirmations", msigProposalInfo: "Proposal info",
+    msigHint: "First deposit into the vault, then propose a transfer — it executes automatically once enough confirmations are collected.",
+    msigLabel: "multi-sig vault", msigDepositing: "Depositing into vault…", msigDepositOk: "Deposit successful.",
+    msigProposing: "Sending proposal…", msigProposed: "Proposal created.",
+    msigConfirming: "Confirming…", msigConfirmed: "Confirmed.",
+    badgesTitle: "Badges", badgesDesc: "Achievements earned from your activity",
+    badgeFaucetBtn: "Claim Faucet Badge", badgeStakerBtn: "Claim Staker Badge", badgeBorrowerBtn: "Claim Borrower Badge",
+    badgeFaucetLbl: "Faucet Badge", badgeStakerLbl: "Staker Badge", badgeBorrowerLbl: "Borrower Badge",
+    badgesHint: "You can only claim a badge if you've done the related action (faucet/stake/borrow) at least once.",
+    badgeClaiming: "Claiming badge…", badgeClaimed: "Badge claimed.",    subtitle: "Stake, lend/borrow, and swap — five contracts, one interface. Not real money, runs on Arc Network Testnet.",
+    connect: "Connect Wallet", connected: "Connected", wrongNetwork: "Wrong network — select Arc Testnet", onArc: "Arc Testnet",
+    balArc: "tARC balance", balUsd: "tUSD balance", balStaked: "Staked", balReward: "Pending reward", refreshBtn: "Refresh", switchNetBtn: "Switch to Arc Testnet",
+    faucetTitle: "Testnet Faucet", faucetDesc: "100 tARC + 100 tUSD per person, once every 24 hours",
+    groupCore: "Core Tools", groupTreasury: "Treasury & Payment Tools", teaserLink: "Explore →", previewCore: "Staking · Lending · Swap", previewTreasury: "Payment Streaming · Escrow · Multi-sig Wallet",
+    claimBtn: "Get Test Tokens", claiming: "Requesting test tokens…", claimOk: "100 tARC + 100 tUSD sent to your wallet.",
+    claimWait: "Time until you can claim again: ", claimReady: "You can claim right now.",
+    hoursShort: "h", minutesShort: "m",
+    stakingTitle: "Staking", stakingDesc: "Lock tARC, earn reward per second",
+    amountArc: "Amount (tARC)", stakeBtn: "Stake", unstakeBtn: "Unstake (all)",
+    yourStaked: "Your staked balance", pendingReward: "Current pending reward",
+    stakeHint: "A spending approval is requested automatically before staking.",
+    lendingTitle: "Lending", lendingDesc: "Deposit collateral, borrow up to 66%",
+    collateralAmount: "Collateral amount (tARC)", depositBtn: "Deposit Collateral", withdrawBtn: "Withdraw Collateral",
+    borrowBtn: "Borrow", repayBtn: "Repay",
+    yourCollateral: "Your collateral balance", yourDebt: "Your debt", maxBorrow: "Max you can borrow (66%)",
+    swapTitle: "Swap", swapDesc: "tARC ⇄ tUSD, x·y=k pool, 0.3% fee",
+    amountToGive: "Amount to give", swapBtn: "Swap",
+    youWillGet: "You will get", poolArc: "Pool tARC", poolUsd: "Pool tUSD",
+    swapHint: "A spending approval for the relevant token is requested automatically before swapping.",
+    lbTitle: "Leaderboard", lbDesc: "Most active wallets (stake, borrow, swap, faucet claims)", lbSortCount: "Action Count", lbSortVolume: "Volume", lbSortReward: "Reward Amount", lbColVolume: "Volume (tARC+tUSD)", lbColReward: "Reward (tARC)",
+    lbLoading: "Reading transactions from chain…", lbRank: "Rank", lbWallet: "Wallet", lbActions: "Actions",
+    lbYou: " (you)",
+    noWallet: "No wallet extension found in this browser (Rabby/MetaMask).",
+    connErr: "Connection error: ", invalidAmt: "Enter a valid amount.",
+    approvingFor: " approval requested…",
+    sendingStake: "Sending stake transaction…", stakeOk: "Stake successful.",
+    sendingUnstake: "Sending unstake transaction…", unstakeOk: "Unstake successful.",
+    depositing: "Depositing collateral…", depositOk: "Collateral deposited.",
+    withdrawing: "Withdrawing collateral…", withdrawOk: "Collateral withdrawn.",
+    borrowing: "Borrowing…", borrowOk: "Borrow successful.",
+    repaying: "Repaying…", repayOk: "Repayment successful.",
+    swappingAB: "Sending swap (tARC → tUSD)…", swappingBA: "Sending swap (tUSD → tARC)…",
+    swapOk: "Swap successful.", txFailed: "Transaction failed: ",
+    stakeLabel: "staking", depositLabel: "collateral deposit", repayLabel: "repayment",
+    swapALabel: "swap (tARC)", swapBLabel: "swap (tUSD)"
+  },
+  es: {
+    tag: "Construido sobre rieles de stablecoin, de principio a fin · Arc Testnet",
+    aboutTitle: "Acerca de StableLab",
+    aboutText: "StableLab es un experimento de código abierto construido desde cero en Arc Network Testnet, que reúne distintos componentes de infraestructura de stablecoins (staking, préstamos, intercambios, un grifo de tokens de prueba y más) en una sola interfaz. Sigue creciendo con nuevos módulos con el tiempo.",
+
+    invalidAddr: "Ingresa una dirección de billetera válida.",
+    streamTitle: "Payment Streaming", streamDesc: "Envía un pago que fluye segundo a segundo con el tiempo",
+    recipientAddr: "Dirección del destinatario (0x...)", totalAmount: "Monto total (tARC)", durationSec: "Duración (segundos)",
+    createStreamBtn: "Iniciar Flujo", streamCreateHint: "Ejemplo: para enviar 100 tARC en 3600 segundos, ingresa 3600 en duración.",
+    streamId: "ID del Flujo", checkBtn: "Consultar", withdrawStreamBtn: "Retirar lo Ganado", cancelStreamBtn: "Cancelar Flujo",
+    withdrawableNow: "Monto retirable ahora", streamHint: "Anota el ID del flujo — lo necesitarás para consultar y retirar.",
+    streamLabel: "flujo de pago", streamCreating: "Creando flujo…", streamCreated: "Flujo de pago creado.",
+    streamWithdrawing: "Retirando monto ganado…", streamWithdrawOk: "Retiro exitoso.",
+    streamCancelling: "Cancelando flujo…", streamCancelOk: "Flujo cancelado.",
+    escrowTitle: "Escrow", escrowDesc: "Transferencia condicional que requiere aprobación de un tercero",
+    beneficiaryAddr: "Dirección del beneficiario", arbiterAddr: "Dirección del árbitro",
+    createDealBtn: "Crear Acuerdo", escrowCreateHint: "El monto queda bloqueado; espera hasta que tú o el árbitro lo liberen o reembolsen.",
+    dealId: "ID del Acuerdo", releaseBtn: "Liberar (al Beneficiario)", refundBtn: "Reembolsar (al Depositante)",
+    dealStatus: "Estado del acuerdo", escrowHint: "Liberar: puede hacerlo el depositante o el árbitro. Reembolsar: puede hacerlo el beneficiario o el árbitro.",
+    escrowLabel: "acuerdo de escrow", dealCreating: "Creando acuerdo…", dealCreated: "Acuerdo creado.",
+    dealReleasing: "Liberando…", dealReleased: "Liberado.",
+    dealRefunding: "Reembolsando…", dealRefunded: "Reembolsado.",
+    msigTitle: "Billetera Multi-sig", msigDesc: "Una bóveda compartida que requiere múltiples confirmaciones",
+    proposeBtn: "Crear Propuesta", proposalId: "ID de Propuesta", confirmBtn: "Confirmar",
+    msigRequired: "Confirmaciones requeridas", msigProposalInfo: "Info de la propuesta",
+    msigHint: "Primero deposita en la bóveda, luego propone una transferencia — se ejecuta automáticamente al reunir suficientes confirmaciones.",
+    msigLabel: "bóveda multi-sig", msigDepositing: "Depositando en la bóveda…", msigDepositOk: "Depósito exitoso.",
+    msigProposing: "Enviando propuesta…", msigProposed: "Propuesta creada.",
+    msigConfirming: "Confirmando…", msigConfirmed: "Confirmado.",
+    badgesTitle: "Insignias", badgesDesc: "Logros obtenidos según tu actividad",
+    badgeFaucetBtn: "Reclamar Insignia Faucet", badgeStakerBtn: "Reclamar Insignia Staker", badgeBorrowerBtn: "Reclamar Insignia Borrower",
+    badgeFaucetLbl: "Insignia Faucet", badgeStakerLbl: "Insignia Staker", badgeBorrowerLbl: "Insignia Borrower",
+    badgesHint: "Solo puedes reclamar una insignia si has hecho la acción relacionada (faucet/staking/préstamo) al menos una vez.",
+    badgeClaiming: "Reclamando insignia…", badgeClaimed: "Insignia reclamada.",    subtitle: "Haz staking, presta/pide prestado e intercambia — cinco contratos, una sola interfaz. No es dinero real, funciona en Arc Network Testnet.",
+    connect: "Conectar Billetera", connected: "Conectado", wrongNetwork: "Red incorrecta — selecciona Arc Testnet", onArc: "Arc Testnet",
+    balArc: "Saldo tARC", balUsd: "Saldo tUSD", balStaked: "En staking", balReward: "Recompensa pendiente", refreshBtn: "Actualizar", switchNetBtn: "Cambiar a Arc Testnet",
+    faucetTitle: "Testnet Faucet", faucetDesc: "100 tARC + 100 tUSD por persona, una vez cada 24 horas",
+    groupCore: "Herramientas Principales", groupTreasury: "Herramientas de Tesorería y Pagos", teaserLink: "Explorar →", previewCore: "Staking · Préstamos · Intercambio", previewTreasury: "Payment Streaming · Escrow · Billetera Multi-sig",
+    claimBtn: "Obtener Tokens de Prueba", claiming: "Solicitando tokens de prueba…", claimOk: "100 tARC + 100 tUSD enviados a tu billetera.",
+    claimWait: "Tiempo hasta poder reclamar de nuevo: ", claimReady: "Puedes reclamar ahora mismo.",
+    hoursShort: "h", minutesShort: "min",
+    stakingTitle: "Staking", stakingDesc: "Bloquea tARC, gana recompensa por segundo",
+    amountArc: "Cantidad (tARC)", stakeBtn: "Hacer Staking", unstakeBtn: "Retirar Staking (todo)",
+    yourStaked: "Tu saldo en staking", pendingReward: "Recompensa pendiente actual",
+    stakeHint: "Se solicita automáticamente una aprobación de gasto antes de hacer staking.",
+    lendingTitle: "Préstamos", lendingDesc: "Deposita garantía, pide prestado hasta el 66%",
+    collateralAmount: "Cantidad de garantía (tARC)", depositBtn: "Depositar Garantía", withdrawBtn: "Retirar Garantía",
+    borrowBtn: "Pedir Prestado", repayBtn: "Pagar",
+    yourCollateral: "Tu saldo de garantía", yourDebt: "Tu deuda", maxBorrow: "Máximo que puedes pedir (66%)",
+    swapTitle: "Intercambio", swapDesc: "tARC ⇄ tUSD, fondo x·y=k, comisión 0.3%",
+    amountToGive: "Cantidad a dar", swapBtn: "Intercambiar",
+    youWillGet: "Recibirás", poolArc: "tARC en el fondo", poolUsd: "tUSD en el fondo",
+    swapHint: "Se solicita automáticamente una aprobación de gasto para el token correspondiente antes de intercambiar.",
+    lbTitle: "Tabla de Clasificación", lbDesc: "Billeteras más activas (staking, préstamos, intercambios, faucet)", lbSortCount: "N.º de Acciones", lbSortVolume: "Volumen", lbSortReward: "Recompensa", lbColVolume: "Volumen (tARC+tUSD)", lbColReward: "Recompensa (tARC)",
+    lbLoading: "Leyendo transacciones de la cadena…", lbRank: "Puesto", lbWallet: "Billetera", lbActions: "Acciones",
+    lbYou: " (tú)",
+    noWallet: "No se encontró una extensión de billetera en este navegador (Rabby/MetaMask).",
+    connErr: "Error de conexión: ", invalidAmt: "Ingresa una cantidad válida.",
+    approvingFor: " solicitando aprobación…",
+    sendingStake: "Enviando transacción de staking…", stakeOk: "Staking exitoso.",
+    sendingUnstake: "Enviando transacción de retiro…", unstakeOk: "Retiro exitoso.",
+    depositing: "Depositando garantía…", depositOk: "Garantía depositada.",
+    withdrawing: "Retirando garantía…", withdrawOk: "Garantía retirada.",
+    borrowing: "Pidiendo prestado…", borrowOk: "Préstamo exitoso.",
+    repaying: "Pagando…", repayOk: "Pago exitoso.",
+    swappingAB: "Enviando intercambio (tARC → tUSD)…", swappingBA: "Enviando intercambio (tUSD → tARC)…",
+    swapOk: "Intercambio exitoso.", txFailed: "Transacción fallida: ",
+    stakeLabel: "staking", depositLabel: "depósito de garantía", repayLabel: "pago",
+    swapALabel: "intercambio (tARC)", swapBLabel: "intercambio (tUSD)"
+  },
+  de: {
+    tag: "Auf Stablecoin-Schienen gebaut, durchgängig · Arc Testnet",
+    aboutTitle: "Über StableLab",
+    aboutText: "StableLab ist ein von Grund auf entwickeltes Open-Source-Experiment auf dem Arc Network Testnet, das verschiedene Bausteine der Stablecoin-Infrastruktur (Staking, Lending, Swaps, ein Test-Token-Faucet und mehr) in einer einzigen Oberfläche vereint. Es wächst mit der Zeit um neue Module.",
+
+    invalidAddr: "Gib eine gültige Wallet-Adresse ein.",
+    streamTitle: "Payment Streaming", streamDesc: "Sende eine Zahlung, die im Zeitverlauf Sekunde für Sekunde fließt",
+    recipientAddr: "Empfängeradresse (0x...)", totalAmount: "Gesamtbetrag (tARC)", durationSec: "Dauer (Sekunden)",
+    createStreamBtn: "Stream Starten", streamCreateHint: "Beispiel: um 100 tARC über 3600 Sekunden zu streamen, gib 3600 als Dauer ein.",
+    streamId: "Stream-ID", checkBtn: "Prüfen", withdrawStreamBtn: "Verdientes Abheben", cancelStreamBtn: "Stream Abbrechen",
+    withdrawableNow: "Aktuell abhebbarer Betrag", streamHint: "Notiere die Stream-ID — wird zum Prüfen und Abheben benötigt.",
+    streamLabel: "Zahlungsstream", streamCreating: "Stream wird erstellt…", streamCreated: "Zahlungsstream erstellt.",
+    streamWithdrawing: "Verdienter Betrag wird abgehoben…", streamWithdrawOk: "Abhebung erfolgreich.",
+    streamCancelling: "Stream wird abgebrochen…", streamCancelOk: "Stream abgebrochen.",
+    escrowTitle: "Escrow", escrowDesc: "Bedingte Übertragung mit Genehmigung durch einen Dritten",
+    beneficiaryAddr: "Begünstigten-Adresse", arbiterAddr: "Schiedsrichter-Adresse",
+    createDealBtn: "Deal Erstellen", escrowCreateHint: "Der Betrag wird gesperrt; er wartet, bis du oder der Schiedsrichter ihn freigibt oder zurückerstattet.",
+    dealId: "Deal-ID", releaseBtn: "Freigeben (an Begünstigten)", refundBtn: "Erstatten (an Einzahler)",
+    dealStatus: "Deal-Status", escrowHint: "Freigabe: Einzahler oder Schiedsrichter können das tun. Erstattung: Begünstigter oder Schiedsrichter können das tun.",
+    escrowLabel: "Escrow-Deal", dealCreating: "Deal wird erstellt…", dealCreated: "Deal erstellt.",
+    dealReleasing: "Wird freigegeben…", dealReleased: "Freigegeben.",
+    dealRefunding: "Wird erstattet…", dealRefunded: "Erstattet.",
+    msigTitle: "Multi-Sig Wallet", msigDesc: "Ein gemeinsamer Tresor mit mehreren erforderlichen Bestätigungen",
+    proposeBtn: "Vorschlag Erstellen", proposalId: "Vorschlag-ID", confirmBtn: "Bestätigen",
+    msigRequired: "Erforderliche Bestätigungen", msigProposalInfo: "Vorschlag-Info",
+    msigHint: "Zahle zuerst in den Tresor ein, schlage dann eine Überweisung vor — sie wird automatisch ausgeführt, sobald genug Bestätigungen vorliegen.",
+    msigLabel: "Multi-Sig-Tresor", msigDepositing: "Einzahlung in den Tresor…", msigDepositOk: "Einzahlung erfolgreich.",
+    msigProposing: "Vorschlag wird gesendet…", msigProposed: "Vorschlag erstellt.",
+    msigConfirming: "Wird bestätigt…", msigConfirmed: "Bestätigt.",
+    badgesTitle: "Abzeichen", badgesDesc: "Erfolge basierend auf deiner Aktivität",
+    badgeFaucetBtn: "Faucet-Abzeichen Holen", badgeStakerBtn: "Staker-Abzeichen Holen", badgeBorrowerBtn: "Borrower-Abzeichen Holen",
+    badgeFaucetLbl: "Faucet-Abzeichen", badgeStakerLbl: "Staker-Abzeichen", badgeBorrowerLbl: "Borrower-Abzeichen",
+    badgesHint: "Du kannst ein Abzeichen nur beanspruchen, wenn du die zugehörige Aktion (Faucet/Staking/Leihen) mindestens einmal gemacht hast.",
+    badgeClaiming: "Abzeichen wird beansprucht…", badgeClaimed: "Abzeichen erhalten.",    subtitle: "Staken, verleihen/leihen und tauschen — fünf Verträge, eine Oberfläche. Kein echtes Geld, läuft auf dem Arc Network Testnet.",
+    connect: "Wallet Verbinden", connected: "Verbunden", wrongNetwork: "Falsches Netzwerk — Arc Testnet wählen", onArc: "Arc Testnet",
+    balArc: "tARC-Guthaben", balUsd: "tUSD-Guthaben", balStaked: "Gestaked", balReward: "Ausstehende Belohnung", refreshBtn: "Aktualisieren", switchNetBtn: "Zu Arc Testnet wechseln",
+    faucetTitle: "Testnet Faucet", faucetDesc: "100 tARC + 100 tUSD pro Person, einmal alle 24 Stunden",
+    groupCore: "Kernwerkzeuge", groupTreasury: "Treasury- und Zahlungstools", teaserLink: "Ansehen →", previewCore: "Staking · Lending · Swap", previewTreasury: "Payment Streaming · Escrow · Multi-Sig Wallet",
+    claimBtn: "Test-Tokens Erhalten", claiming: "Test-Tokens werden angefragt…", claimOk: "100 tARC + 100 tUSD an dein Wallet gesendet.",
+    claimWait: "Zeit bis zur nächsten Anfrage: ", claimReady: "Du kannst jetzt anfragen.",
+    hoursShort: "Std", minutesShort: "Min",
+    stakingTitle: "Staking", stakingDesc: "tARC sperren, pro Sekunde Belohnung verdienen",
+    amountArc: "Betrag (tARC)", stakeBtn: "Staken", unstakeBtn: "Unstake (alles)",
+    yourStaked: "Dein gestaktes Guthaben", pendingReward: "Aktuell ausstehende Belohnung",
+    stakeHint: "Vor dem Staken wird automatisch eine Ausgabengenehmigung angefragt.",
+    lendingTitle: "Lending", lendingDesc: "Sicherheit hinterlegen, bis zu 66% leihen",
+    collateralAmount: "Sicherheitsbetrag (tARC)", depositBtn: "Sicherheit Einzahlen", withdrawBtn: "Sicherheit Abheben",
+    borrowBtn: "Leihen", repayBtn: "Zurückzahlen",
+    yourCollateral: "Dein Sicherheitsguthaben", yourDebt: "Deine Schulden", maxBorrow: "Maximal leihbar (66%)",
+    swapTitle: "Swap", swapDesc: "tARC ⇄ tUSD, x·y=k-Pool, 0,3% Gebühr",
+    amountToGive: "Zu gebender Betrag", swapBtn: "Tauschen",
+    youWillGet: "Du erhältst", poolArc: "Pool tARC", poolUsd: "Pool tUSD",
+    swapHint: "Vor dem Tausch wird automatisch eine Ausgabengenehmigung für den jeweiligen Token angefragt.",
+    noWallet: "In diesem Browser wurde keine Wallet-Erweiterung gefunden (Rabby/MetaMask).",
+    connErr: "Verbindungsfehler: ", invalidAmt: "Gib einen gültigen Betrag ein.",
+    approvingFor: " Genehmigung wird angefragt…",
+    sendingStake: "Stake-Transaktion wird gesendet…", stakeOk: "Staking erfolgreich.",
+    sendingUnstake: "Unstake-Transaktion wird gesendet…", unstakeOk: "Unstake erfolgreich.",
+    depositing: "Sicherheit wird eingezahlt…", depositOk: "Sicherheit eingezahlt.",
+    withdrawing: "Sicherheit wird abgehoben…", withdrawOk: "Sicherheit abgehoben.",
+    borrowing: "Wird geliehen…", borrowOk: "Leihe erfolgreich.",
+    repaying: "Wird zurückgezahlt…", repayOk: "Rückzahlung erfolgreich.",
+    swappingAB: "Swap wird gesendet (tARC → tUSD)…", swappingBA: "Swap wird gesendet (tUSD → tARC)…",
+    swapOk: "Swap erfolgreich.", txFailed: "Transaktion fehlgeschlagen: ",
+    stakeLabel: "Staking", depositLabel: "Sicherheitseinzahlung", repayLabel: "Rückzahlung",
+    swapALabel: "Swap (tARC)", swapBLabel: "Swap (tUSD)",
+    lbTitle: "Bestenliste", lbDesc: "Aktivste Wallets (Staking, Kredite, Swaps, Faucet)", lbSortCount: "Anzahl Aktionen", lbSortVolume: "Volumen", lbSortReward: "Belohnung", lbColVolume: "Volumen (tARC+tUSD)", lbColReward: "Belohnung (tARC)",
+    lbLoading: "Transaktionen werden von der Chain gelesen…", lbRank: "Rang", lbWallet: "Wallet", lbActions: "Aktionen",
+    lbYou: " (du)",
+  },
+  zh: {
+    tag: "建立在稳定币轨道之上，全流程贯通 · Arc 测试网",
+    aboutTitle: "关于 StableLab",
+    aboutText: "StableLab 是一个在 Arc Network Testnet 上从零构建的开源实验项目，将稳定币基础设施的不同组成部分（质押、借贷、兑换、测试代币水龙头等）整合到一个统一的界面中。项目会随着时间不断加入新模块持续成长。",
+
+    invalidAddr: "请输入有效的钱包地址。",
+    streamTitle: "Payment Streaming", streamDesc: "发送一笔随时间逐秒流动的付款",
+    recipientAddr: "接收地址 (0x...)", totalAmount: "总金额 (tARC)", durationSec: "时长（秒）",
+    createStreamBtn: "开始支付流", streamCreateHint: "示例：要在 3600 秒内流转 100 tARC，请将时长填写为 3600。",
+    streamId: "支付流 ID", checkBtn: "查询", withdrawStreamBtn: "提取已获得部分", cancelStreamBtn: "取消支付流",
+    withdrawableNow: "当前可提取金额", streamHint: "请记下支付流 ID —— 查询和提取时需要用到。",
+    streamLabel: "支付流", streamCreating: "正在创建支付流…", streamCreated: "支付流已创建。",
+    streamWithdrawing: "正在提取已获得金额…", streamWithdrawOk: "提取成功。",
+    streamCancelling: "正在取消支付流…", streamCancelOk: "支付流已取消。",
+    escrowTitle: "Escrow 托管", escrowDesc: "需要第三方批准的条件性转账",
+    beneficiaryAddr: "受益人地址", arbiterAddr: "仲裁人地址",
+    createDealBtn: "创建交易", escrowCreateHint: "金额将被锁定；在你或仲裁人放行或退款之前会一直等待。",
+    dealId: "交易 ID", releaseBtn: "放行（给受益人）", refundBtn: "退款（给存入人）",
+    dealStatus: "交易状态", escrowHint: "放行：存入人或仲裁人可操作。退款：受益人或仲裁人可操作。",
+    escrowLabel: "托管交易", dealCreating: "正在创建交易…", dealCreated: "交易已创建。",
+    dealReleasing: "正在放行…", dealReleased: "已放行。",
+    dealRefunding: "正在退款…", dealRefunded: "已退款。",
+    msigTitle: "多签钱包", msigDesc: "需要多重确认的共享金库",
+    proposeBtn: "创建提案", proposalId: "提案 ID", confirmBtn: "确认",
+    msigRequired: "所需确认数", msigProposalInfo: "提案信息",
+    msigHint: "先存入金库，然后提出转账提案——一旦收集到足够确认，将自动执行。",
+    msigLabel: "多签金库", msigDepositing: "正在存入金库…", msigDepositOk: "存入成功。",
+    msigProposing: "正在发送提案…", msigProposed: "提案已创建。",
+    msigConfirming: "正在确认…", msigConfirmed: "已确认。",
+    badgesTitle: "徽章", badgesDesc: "根据你的活动获得的成就",
+    badgeFaucetBtn: "领取水龙头徽章", badgeStakerBtn: "领取质押者徽章", badgeBorrowerBtn: "领取借款者徽章",
+    badgeFaucetLbl: "水龙头徽章", badgeStakerLbl: "质押者徽章", badgeBorrowerLbl: "借款者徽章",
+    badgesHint: "只有在至少完成过一次相关操作（领取测试币/质押/借款）后才能领取对应徽章。",
+    badgeClaiming: "正在领取徽章…", badgeClaimed: "徽章已领取。",    subtitle: "质押、借贷和兑换 —— 五个合约，一个界面。非真实货币，运行于 Arc Network Testnet。",
+    connect: "连接钱包", connected: "已连接", wrongNetwork: "网络错误 — 请选择 Arc Testnet", onArc: "Arc Testnet",
+    balArc: "tARC 余额", balUsd: "tUSD 余额", balStaked: "已质押", balReward: "待领取奖励", refreshBtn: "刷新", switchNetBtn: "切换到 Arc Testnet",
+    faucetTitle: "测试网水龙头", faucetDesc: "每人每24小时可领取 100 tARC + 100 tUSD",
+    groupCore: "核心工具", groupTreasury: "资金与支付工具", teaserLink: "查看 →", previewCore: "质押 · 借贷 · 兑换", previewTreasury: "支付流 · 托管 · 多签钱包",
+    claimBtn: "领取测试代币", claiming: "正在请求测试代币…", claimOk: "已向你的钱包发送 100 tARC + 100 tUSD。",
+    claimWait: "距离下次可领取还有：", claimReady: "现在可以领取。",
+    hoursShort: "时", minutesShort: "分",
+    stakingTitle: "质押", stakingDesc: "锁定 tARC，按秒获得奖励",
+    amountArc: "数量 (tARC)", stakeBtn: "质押", unstakeBtn: "解除质押（全部）",
+    yourStaked: "你的质押余额", pendingReward: "当前待领取奖励",
+    stakeHint: "质押前会自动请求代币使用授权。",
+    lendingTitle: "借贷", lendingDesc: "存入抵押品，最多可借入 66%",
+    collateralAmount: "抵押数量 (tARC)", depositBtn: "存入抵押品", withdrawBtn: "取出抵押品",
+    borrowBtn: "借款", repayBtn: "还款",
+    yourCollateral: "你的抵押余额", yourDebt: "你的负债", maxBorrow: "最多可借入 (66%)",
+    swapTitle: "兑换", swapDesc: "tARC ⇄ tUSD，x·y=k 恒定乘积池，0.3% 手续费",
+    amountToGive: "支付数量", swapBtn: "兑换",
+    youWillGet: "你将获得", poolArc: "池中 tARC", poolUsd: "池中 tUSD",
+    swapHint: "兑换前会自动请求相应代币的使用授权。",
+    noWallet: "在此浏览器中未找到钱包扩展程序（Rabby/MetaMask）。",
+    connErr: "连接错误： ", invalidAmt: "请输入有效数量。",
+    approvingFor: " 正在请求授权…",
+    sendingStake: "正在发送质押交易…", stakeOk: "质押成功。",
+    sendingUnstake: "正在发送解除质押交易…", unstakeOk: "解除质押成功。",
+    depositing: "正在存入抵押品…", depositOk: "抵押品已存入。",
+    withdrawing: "正在取出抵押品…", withdrawOk: "抵押品已取出。",
+    borrowing: "正在借款…", borrowOk: "借款成功。",
+    repaying: "正在还款…", repayOk: "还款成功。",
+    swappingAB: "正在发送兑换 (tARC → tUSD)…", swappingBA: "正在发送兑换 (tUSD → tARC)…",
+    swapOk: "兑换成功。", txFailed: "交易失败： ",
+    stakeLabel: "质押", depositLabel: "抵押品存入", repayLabel: "还款",
+    swapALabel: "兑换 (tARC)", swapBLabel: "兑换 (tUSD)",
+    lbTitle: "排行榜", lbDesc: "最活跃的钱包（质押、借贷、兑换、领取测试币）", lbSortCount: "操作次数", lbSortVolume: "交易量", lbSortReward: "奖励数量", lbColVolume: "交易量 (tARC+tUSD)", lbColReward: "奖励 (tARC)",
+    lbLoading: "正在从链上读取交易…", lbRank: "排名", lbWallet: "钱包地址", lbActions: "操作次数",
+    lbYou: "（你）",
+  },
+  hi: {
+    tag: "स्टेबलकॉइन रेल्स पर, आरंभ से अंत तक निर्मित · Arc Testnet",
+    aboutTitle: "StableLab के बारे में",
+    aboutText: "StableLab, Arc Network Testnet पर शुरू से बनाया गया एक ओपन-सोर्स प्रयोग है, जो स्टेबलकॉइन इंफ्रास्ट्रक्चर के विभिन्न हिस्सों (स्टेकिंग, उधार, स्वैपिंग, टेस्ट-टोकन फॉसेट, और अधिक) को एक ही इंटरफ़ेस में एक साथ लाता है। समय के साथ नए मॉड्यूल जोड़े जाते रहते हैं।",
+
+    invalidAddr: "एक वैध वॉलेट पता दर्ज करें।",
+    streamTitle: "Payment Streaming", streamDesc: "समय के साथ सेकंड-दर-सेकंड बहने वाला भुगतान भेजें",
+    recipientAddr: "प्राप्तकर्ता पता (0x...)", totalAmount: "कुल राशि (tARC)", durationSec: "अवधि (सेकंड)",
+    createStreamBtn: "स्ट्रीम शुरू करें", streamCreateHint: "उदाहरण: 3600 सेकंड में 100 tARC प्रवाहित करने के लिए अवधि में 3600 दर्ज करें।",
+    streamId: "स्ट्रीम ID", checkBtn: "जांचें", withdrawStreamBtn: "अर्जित राशि निकालें", cancelStreamBtn: "स्ट्रीम रद्द करें",
+    withdrawableNow: "अभी निकाली जा सकने वाली राशि", streamHint: "स्ट्रीम ID नोट करें — जांचने और निकालने के लिए आवश्यक है।",
+    streamLabel: "भुगतान स्ट्रीम", streamCreating: "स्ट्रीम बनाई जा रही है…", streamCreated: "भुगतान स्ट्रीम बनाई गई।",
+    streamWithdrawing: "अर्जित राशि निकाली जा रही है…", streamWithdrawOk: "निकासी सफल रही।",
+    streamCancelling: "स्ट्रीम रद्द की जा रही है…", streamCancelOk: "स्ट्रीम रद्द हुई।",
+    escrowTitle: "एस्क्रो", escrowDesc: "तीसरे पक्ष की मंजूरी वाला सशर्त ट्रांसफर",
+    beneficiaryAddr: "लाभार्थी पता", arbiterAddr: "मध्यस्थ पता",
+    createDealBtn: "डील बनाएं", escrowCreateHint: "राशि लॉक हो जाती है; आप या मध्यस्थ इसे जारी या वापस करने तक प्रतीक्षा करती है।",
+    dealId: "डील ID", releaseBtn: "जारी करें (लाभार्थी को)", refundBtn: "वापस करें (जमाकर्ता को)",
+    dealStatus: "डील स्थिति", escrowHint: "जारी करना: जमाकर्ता या मध्यस्थ कर सकते हैं। वापसी: लाभार्थी या मध्यस्थ कर सकते हैं।",
+    escrowLabel: "एस्क्रो डील", dealCreating: "डील बनाई जा रही है…", dealCreated: "डील बनाई गई।",
+    dealReleasing: "जारी की जा रही है…", dealReleased: "जारी की गई।",
+    dealRefunding: "वापस की जा रही है…", dealRefunded: "वापस की गई।",
+    msigTitle: "मल्टी-सिग वॉलेट", msigDesc: "कई पुष्टियों की आवश्यकता वाला साझा वॉल्ट",
+    proposeBtn: "प्रस्ताव बनाएं", proposalId: "प्रस्ताव ID", confirmBtn: "पुष्टि करें",
+    msigRequired: "आवश्यक पुष्टियां", msigProposalInfo: "प्रस्ताव जानकारी",
+    msigHint: "पहले वॉल्ट में जमा करें, फिर ट्रांसफर का प्रस्ताव दें — पर्याप्त पुष्टियां मिलते ही यह स्वतः निष्पादित हो जाता है।",
+    msigLabel: "मल्टी-सिग वॉल्ट", msigDepositing: "वॉल्ट में जमा हो रहा है…", msigDepositOk: "जमा सफल रहा।",
+    msigProposing: "प्रस्ताव भेजा जा रहा है…", msigProposed: "प्रस्ताव बनाया गया।",
+    msigConfirming: "पुष्टि की जा रही है…", msigConfirmed: "पुष्टि हो गई।",
+    badgesTitle: "बैज", badgesDesc: "आपकी गतिविधि के आधार पर अर्जित उपलब्धियां",
+    badgeFaucetBtn: "फॉसेट बैज लें", badgeStakerBtn: "स्टेकर बैज लें", badgeBorrowerBtn: "बॉरोअर बैज लें",
+    badgeFaucetLbl: "फॉसेट बैज", badgeStakerLbl: "स्टेकर बैज", badgeBorrowerLbl: "बॉरोअर बैज",
+    badgesHint: "आप कोई बैज तभी ले सकते हैं जब आपने संबंधित कार्रवाई (फॉसेट/स्टेकिंग/उधार) कम से कम एक बार की हो।",
+    badgeClaiming: "बैज प्राप्त किया जा रहा है…", badgeClaimed: "बैज प्राप्त हुआ।",    subtitle: "स्टेक करें, उधार लें/दें, और स्वैप करें — पाँच कॉन्ट्रैक्ट, एक इंटरफ़ेस। यह असली पैसा नहीं है, Arc Network Testnet पर चलता है।",
+    connect: "वॉलेट कनेक्ट करें", connected: "कनेक्टेड", wrongNetwork: "गलत नेटवर्क — Arc Testnet चुनें", onArc: "Arc Testnet",
+    balArc: "tARC बैलेंस", balUsd: "tUSD बैलेंस", balStaked: "स्टेक किया गया", balReward: "लंबित रिवॉर्ड", refreshBtn: "रीफ्रेश करें", switchNetBtn: "Arc Testnet पर स्विच करें",
+    faucetTitle: "Testnet Faucet", faucetDesc: "प्रति व्यक्ति 100 tARC + 100 tUSD, हर 24 घंटे में एक बार",
+    groupCore: "मुख्य उपकरण", groupTreasury: "ट्रेजरी और भुगतान उपकरण", teaserLink: "देखें →", previewCore: "स्टेकिंग · लेंडिंग · स्वैप", previewTreasury: "पेमेंट स्ट्रीमिंग · एस्क्रो · मल्टी-सिग वॉलेट",
+    claimBtn: "टेस्ट टोकन प्राप्त करें", claiming: "टेस्ट टोकन का अनुरोध किया जा रहा है…", claimOk: "आपके वॉलेट में 100 tARC + 100 tUSD भेजे गए।",
+    claimWait: "अगली बार दावा करने तक शेष समय: ", claimReady: "आप अभी दावा कर सकते हैं।",
+    hoursShort: "घं", minutesShort: "मि",
+    stakingTitle: "स्टेकिंग", stakingDesc: "tARC लॉक करें, हर सेकंड रिवॉर्ड कमाएं",
+    amountArc: "राशि (tARC)", stakeBtn: "स्टेक करें", unstakeBtn: "अनस्टेक करें (सभी)",
+    yourStaked: "आपका स्टेक किया गया बैलेंस", pendingReward: "वर्तमान लंबित रिवॉर्ड",
+    stakeHint: "स्टेक करने से पहले खर्च की अनुमति स्वतः माँगी जाती है।",
+    lendingTitle: "लेंडिंग", lendingDesc: "कोलैटरल जमा करें, 66% तक उधार लें",
+    collateralAmount: "कोलैटरल राशि (tARC)", depositBtn: "कोलैटरल जमा करें", withdrawBtn: "कोलैटरल निकालें",
+    borrowBtn: "उधार लें", repayBtn: "चुकाएं",
+    yourCollateral: "आपका कोलैटरल बैलेंस", yourDebt: "आपका कर्ज़", maxBorrow: "अधिकतम उधार (66%)",
+    swapTitle: "स्वैप", swapDesc: "tARC ⇄ tUSD, x·y=k पूल, 0.3% शुल्क",
+    amountToGive: "देने की राशि", swapBtn: "स्वैप करें",
+    youWillGet: "आपको मिलेगा", poolArc: "पूल में tARC", poolUsd: "पूल में tUSD",
+    swapHint: "स्वैप से पहले संबंधित टोकन के लिए खर्च की अनुमति स्वतः माँगी जाती है।",
+    noWallet: "इस ब्राउज़र में कोई वॉलेट एक्सटेंशन नहीं मिला (Rabby/MetaMask)।",
+    connErr: "कनेक्शन त्रुटि: ", invalidAmt: "एक वैध राशि दर्ज करें।",
+    approvingFor: " के लिए अनुमति माँगी जा रही है…",
+    sendingStake: "स्टेक ट्रांज़ैक्शन भेजा जा रहा है…", stakeOk: "स्टेकिंग सफल रही।",
+    sendingUnstake: "अनस्टेक ट्रांज़ैक्शन भेजा जा रहा है…", unstakeOk: "अनस्टेकिंग सफल रही।",
+    depositing: "कोलैटरल जमा किया जा रहा है…", depositOk: "कोलैटरल जमा हो गया।",
+    withdrawing: "कोलैटरल निकाला जा रहा है…", withdrawOk: "कोलैटरल निकाल लिया गया।",
+    borrowing: "उधार लिया जा रहा है…", borrowOk: "उधार सफल रहा।",
+    repaying: "चुकाया जा रहा है…", repayOk: "भुगतान सफल रहा।",
+    swappingAB: "स्वैप भेजा जा रहा है (tARC → tUSD)…", swappingBA: "स्वैप भेजा जा रहा है (tUSD → tARC)…",
+    swapOk: "स्वैप सफल रहा।", txFailed: "ट्रांज़ैक्शन विफल: ",
+    stakeLabel: "स्टेकिंग", depositLabel: "कोलैटरल जमा", repayLabel: "भुगतान",
+    swapALabel: "स्वैप (tARC)", swapBLabel: "स्वैप (tUSD)",
+    lbTitle: "लीडरबोर्ड", lbDesc: "सबसे सक्रिय वॉलेट (स्टेकिंग, उधार, स्वैप, फॉसेट)", lbSortCount: "कार्रवाई संख्या", lbSortVolume: "वॉल्यूम", lbSortReward: "रिवॉर्ड राशि", lbColVolume: "वॉल्यूम (tARC+tUSD)", lbColReward: "रिवॉर्ड (tARC)",
+    lbLoading: "चेन से ट्रांज़ैक्शन पढ़े जा रहे हैं…", lbRank: "रैंक", lbWallet: "वॉलेट", lbActions: "कार्रवाइयाँ",
+    lbYou: " (आप)",
+  },
+  fr: {
+    tag: "Construit sur des rails de stablecoin, de bout en bout · Arc Testnet",
+    aboutTitle: "À propos de StableLab",
+    aboutText: "StableLab est une expérience open-source construite de A à Z sur Arc Network Testnet, réunissant différents composants de l'infrastructure stablecoin (staking, prêts, échanges, un robinet de tokens de test, et plus encore) dans une seule interface. Il continue de croître avec de nouveaux modules au fil du temps.",
+
+    invalidAddr: "Entrez une adresse de portefeuille valide.",
+    streamTitle: "Payment Streaming", streamDesc: "Envoyez un paiement qui s'écoule seconde par seconde dans le temps",
+    recipientAddr: "Adresse du destinataire (0x...)", totalAmount: "Montant total (tARC)", durationSec: "Durée (secondes)",
+    createStreamBtn: "Démarrer le Flux", streamCreateHint: "Exemple : pour diffuser 100 tARC sur 3600 secondes, entrez 3600 comme durée.",
+    streamId: "ID du Flux", checkBtn: "Vérifier", withdrawStreamBtn: "Retirer le Gagné", cancelStreamBtn: "Annuler le Flux",
+    withdrawableNow: "Montant retirable actuellement", streamHint: "Notez l'ID du flux — nécessaire pour vérifier et retirer.",
+    streamLabel: "flux de paiement", streamCreating: "Création du flux…", streamCreated: "Flux de paiement créé.",
+    streamWithdrawing: "Retrait du montant gagné…", streamWithdrawOk: "Retrait réussi.",
+    streamCancelling: "Annulation du flux…", streamCancelOk: "Flux annulé.",
+    escrowTitle: "Escrow", escrowDesc: "Transfert conditionnel nécessitant l'approbation d'un tiers",
+    beneficiaryAddr: "Adresse du bénéficiaire", arbiterAddr: "Adresse de l'arbitre",
+    createDealBtn: "Créer l'Accord", escrowCreateHint: "Le montant est bloqué ; il attend que vous ou l'arbitre le libériez ou le remboursiez.",
+    dealId: "ID de l'Accord", releaseBtn: "Libérer (au Bénéficiaire)", refundBtn: "Rembourser (au Déposant)",
+    dealStatus: "Statut de l'accord", escrowHint: "Libération : le déposant ou l'arbitre peut le faire. Remboursement : le bénéficiaire ou l'arbitre peut le faire.",
+    escrowLabel: "accord escrow", dealCreating: "Création de l'accord…", dealCreated: "Accord créé.",
+    dealReleasing: "Libération…", dealReleased: "Libéré.",
+    dealRefunding: "Remboursement…", dealRefunded: "Remboursé.",
+    msigTitle: "Portefeuille Multi-sig", msigDesc: "Un coffre partagé nécessitant plusieurs confirmations",
+    proposeBtn: "Créer une Proposition", proposalId: "ID de Proposition", confirmBtn: "Confirmer",
+    msigRequired: "Confirmations requises", msigProposalInfo: "Info de la proposition",
+    msigHint: "Déposez d'abord dans le coffre, puis proposez un transfert — il s'exécute automatiquement une fois assez de confirmations réunies.",
+    msigLabel: "coffre multi-sig", msigDepositing: "Dépôt dans le coffre…", msigDepositOk: "Dépôt réussi.",
+    msigProposing: "Envoi de la proposition…", msigProposed: "Proposition créée.",
+    msigConfirming: "Confirmation…", msigConfirmed: "Confirmé.",
+    badgesTitle: "Badges", badgesDesc: "Réussites obtenues selon votre activité",
+    badgeFaucetBtn: "Obtenir le Badge Faucet", badgeStakerBtn: "Obtenir le Badge Staker", badgeBorrowerBtn: "Obtenir le Badge Borrower",
+    badgeFaucetLbl: "Badge Faucet", badgeStakerLbl: "Badge Staker", badgeBorrowerLbl: "Badge Borrower",
+    badgesHint: "Vous ne pouvez obtenir un badge que si vous avez fait l'action associée (faucet/staking/emprunt) au moins une fois.",
+    badgeClaiming: "Obtention du badge…", badgeClaimed: "Badge obtenu.",    subtitle: "Stakez, prêtez/empruntez et échangez — cinq contrats, une seule interface. Pas de l'argent réel, fonctionne sur Arc Network Testnet.",
+    connect: "Connecter le Portefeuille", connected: "Connecté", wrongNetwork: "Mauvais réseau — sélectionnez Arc Testnet", onArc: "Arc Testnet",
+    balArc: "Solde tARC", balUsd: "Solde tUSD", balStaked: "En staking", balReward: "Récompense en attente", refreshBtn: "Actualiser", switchNetBtn: "Passer à Arc Testnet",
+    faucetTitle: "Testnet Faucet", faucetDesc: "100 tARC + 100 tUSD par personne, une fois toutes les 24 heures",
+    groupCore: "Outils Principaux", groupTreasury: "Outils de Trésorerie et Paiement", teaserLink: "Découvrir →", previewCore: "Staking · Prêts · Échange", previewTreasury: "Payment Streaming · Escrow · Portefeuille Multi-sig",
+    claimBtn: "Obtenir des Tokens de Test", claiming: "Demande de tokens de test en cours…", claimOk: "100 tARC + 100 tUSD envoyés à votre portefeuille.",
+    claimWait: "Temps avant de pouvoir réclamer à nouveau : ", claimReady: "Vous pouvez réclamer maintenant.",
+    hoursShort: "h", minutesShort: "min",
+    stakingTitle: "Staking", stakingDesc: "Verrouillez des tARC, gagnez une récompense chaque seconde",
+    amountArc: "Montant (tARC)", stakeBtn: "Staker", unstakeBtn: "Retirer le Staking (tout)",
+    yourStaked: "Votre solde en staking", pendingReward: "Récompense en attente actuelle",
+    stakeHint: "Une autorisation de dépense est demandée automatiquement avant le staking.",
+    lendingTitle: "Prêts", lendingDesc: "Déposez une garantie, empruntez jusqu'à 66%",
+    collateralAmount: "Montant de la garantie (tARC)", depositBtn: "Déposer la Garantie", withdrawBtn: "Retirer la Garantie",
+    borrowBtn: "Emprunter", repayBtn: "Rembourser",
+    yourCollateral: "Votre solde de garantie", yourDebt: "Votre dette", maxBorrow: "Maximum empruntable (66%)",
+    swapTitle: "Échange", swapDesc: "tARC ⇄ tUSD, pool x·y=k, frais de 0,3%",
+    amountToGive: "Montant à donner", swapBtn: "Échanger",
+    youWillGet: "Vous recevrez", poolArc: "tARC dans le pool", poolUsd: "tUSD dans le pool",
+    swapHint: "Une autorisation de dépense pour le token concerné est demandée automatiquement avant l'échange.",
+    noWallet: "Aucune extension de portefeuille trouvée dans ce navigateur (Rabby/MetaMask).",
+    connErr: "Erreur de connexion : ", invalidAmt: "Entrez un montant valide.",
+    approvingFor: " autorisation demandée…",
+    sendingStake: "Envoi de la transaction de staking…", stakeOk: "Staking réussi.",
+    sendingUnstake: "Envoi de la transaction de retrait…", unstakeOk: "Retrait réussi.",
+    depositing: "Dépôt de la garantie…", depositOk: "Garantie déposée.",
+    withdrawing: "Retrait de la garantie…", withdrawOk: "Garantie retirée.",
+    borrowing: "Emprunt en cours…", borrowOk: "Emprunt réussi.",
+    repaying: "Remboursement en cours…", repayOk: "Remboursement réussi.",
+    swappingAB: "Envoi de l'échange (tARC → tUSD)…", swappingBA: "Envoi de l'échange (tUSD → tARC)…",
+    swapOk: "Échange réussi.", txFailed: "Transaction échouée : ",
+    stakeLabel: "staking", depositLabel: "dépôt de garantie", repayLabel: "remboursement",
+    swapALabel: "échange (tARC)", swapBLabel: "échange (tUSD)",
+    lbTitle: "Classement", lbDesc: "Portefeuilles les plus actifs (staking, prêts, échanges, faucet)", lbSortCount: "Nombre d'Actions", lbSortVolume: "Volume", lbSortReward: "Récompense", lbColVolume: "Volume (tARC+tUSD)", lbColReward: "Récompense (tARC)",
+    lbLoading: "Lecture des transactions depuis la chaîne…", lbRank: "Rang", lbWallet: "Portefeuille", lbActions: "Actions",
+    lbYou: " (vous)",
+  },
+  sw: {
+    tag: "Imejengwa juu ya reli za stablecoin, mwanzo hadi mwisho · Arc Testnet",
+    aboutTitle: "Kuhusu StableLab",
+    aboutText: "StableLab ni jaribio la chanzo huria lililojengwa kutoka mwanzo kwenye Arc Network Testnet, likileta pamoja vipengele mbalimbali vya miundombinu ya stablecoin (staking, ukopeshaji, ubadilishaji, faucet ya tokeni za majaribio, na zaidi) katika kiolesura kimoja. Linaendelea kukua kwa moduli mpya kadri muda unavyopita.",
+
+    invalidAddr: "Weka anwani sahihi ya pochi.",
+    streamTitle: "Payment Streaming", streamDesc: "Tuma malipo yanayotiririka sekunde kwa sekunde kwa muda",
+    recipientAddr: "Anwani ya mpokeaji (0x...)", totalAmount: "Jumla ya kiasi (tARC)", durationSec: "Muda (sekunde)",
+    createStreamBtn: "Anzisha Mtiririko", streamCreateHint: "Mfano: kutiririsha tARC 100 kwa sekunde 3600, weka 3600 kwenye muda.",
+    streamId: "ID ya Mtiririko", checkBtn: "Angalia", withdrawStreamBtn: "Toa Kilichopatikana", cancelStreamBtn: "Ghairi Mtiririko",
+    withdrawableNow: "Kiasi kinachoweza kutolewa sasa", streamHint: "Andika ID ya mtiririko — inahitajika kuangalia na kutoa.",
+    streamLabel: "mtiririko wa malipo", streamCreating: "Inaunda mtiririko…", streamCreated: "Mtiririko wa malipo umeundwa.",
+    streamWithdrawing: "Inatoa kiasi kilichopatikana…", streamWithdrawOk: "Kutoa kumefanikiwa.",
+    streamCancelling: "Inaghairi mtiririko…", streamCancelOk: "Mtiririko umeghairiwa.",
+    escrowTitle: "Escrow", escrowDesc: "Uhamisho wa masharti unaohitaji idhini ya mtu wa tatu",
+    beneficiaryAddr: "Anwani ya mnufaika", arbiterAddr: "Anwani ya msuluhishi",
+    createDealBtn: "Unda Mkataba", escrowCreateHint: "Kiasi kinafungwa; kinasubiri wewe au msuluhishi kukiachilia au kukirudisha.",
+    dealId: "ID ya Mkataba", releaseBtn: "Achilia (kwa Mnufaika)", refundBtn: "Rudisha (kwa Mwekaji)",
+    dealStatus: "Hali ya mkataba", escrowHint: "Kuachilia: mwekaji au msuluhishi anaweza. Kurudisha: mnufaika au msuluhishi anaweza.",
+    escrowLabel: "mkataba wa escrow", dealCreating: "Inaunda mkataba…", dealCreated: "Mkataba umeundwa.",
+    dealReleasing: "Inaachilia…", dealReleased: "Imeachiliwa.",
+    dealRefunding: "Inarudisha…", dealRefunded: "Imerudishwa.",
+    msigTitle: "Pochi ya Multi-sig", msigDesc: "Hazina ya pamoja inayohitaji uthibitisho wa watu wengi",
+    proposeBtn: "Unda Pendekezo", proposalId: "ID ya Pendekezo", confirmBtn: "Thibitisha",
+    msigRequired: "Uthibitisho unaohitajika", msigProposalInfo: "Taarifa za pendekezo",
+    msigHint: "Kwanza weka kwenye hazina, kisha pendekeza uhamisho — utatekelezwa kiotomatiki mara uthibitisho wa kutosha ukikusanywa.",
+    msigLabel: "hazina ya multi-sig", msigDepositing: "Inaweka kwenye hazina…", msigDepositOk: "Kuweka kumefanikiwa.",
+    msigProposing: "Inatuma pendekezo…", msigProposed: "Pendekezo limeundwa.",
+    msigConfirming: "Inathibitisha…", msigConfirmed: "Imethibitishwa.",
+    badgesTitle: "Beji", badgesDesc: "Mafanikio uliyopata kulingana na shughuli zako",
+    badgeFaucetBtn: "Pata Beji ya Faucet", badgeStakerBtn: "Pata Beji ya Staker", badgeBorrowerBtn: "Pata Beji ya Borrower",
+    badgeFaucetLbl: "Beji ya Faucet", badgeStakerLbl: "Beji ya Staker", badgeBorrowerLbl: "Beji ya Borrower",
+    badgesHint: "Unaweza kupata beji tu kama umefanya kitendo husika (faucet/staking/kukopa) angalau mara moja.",
+    badgeClaiming: "Inapata beji…", badgeClaimed: "Beji imepatikana.",    subtitle: "Weka dau (stake), kopa/kopesha, na badilisha — mikataba mitano, kiolesura kimoja. Sio pesa halisi, inaendesha kwenye Arc Network Testnet.",
+    connect: "Unganisha Pochi", connected: "Imeunganishwa", wrongNetwork: "Mtandao mbaya — chagua Arc Testnet", onArc: "Arc Testnet",
+    balArc: "Salio la tARC", balUsd: "Salio la tUSD", balStaked: "Imewekwa Dau", balReward: "Zawadi Inayosubiri", refreshBtn: "Onyesha Upya", switchNetBtn: "Badili kwenda Arc Testnet",
+    faucetTitle: "Testnet Faucet", faucetDesc: "tARC 100 + tUSD 100 kwa kila mtu, mara moja kila saa 24",
+    groupCore: "Zana za Msingi", groupTreasury: "Zana za Hazina na Malipo", teaserLink: "Angalia →", previewCore: "Staking · Ukopeshaji · Ubadilishaji", previewTreasury: "Payment Streaming · Escrow · Pochi ya Multi-sig",
+    claimBtn: "Pata Tokeni za Majaribio", claiming: "Inaomba tokeni za majaribio…", claimOk: "tARC 100 + tUSD 100 zimetumwa kwenye pochi yako.",
+    claimWait: "Muda uliobaki kudai tena: ", claimReady: "Unaweza kudai sasa hivi.",
+    hoursShort: "saa", minutesShort: "dak",
+    stakingTitle: "Staking", stakingDesc: "Funga tARC, pata zawadi kila sekunde",
+    amountArc: "Kiasi (tARC)", stakeBtn: "Weka Dau", unstakeBtn: "Toa Dau (yote)",
+    yourStaked: "Salio lako lililowekwa dau", pendingReward: "Zawadi inayosubiri sasa",
+    stakeHint: "Idhini ya matumizi huombwa kiotomatiki kabla ya kuweka dau.",
+    lendingTitle: "Ukopeshaji", lendingDesc: "Weka dhamana, kopa hadi 66%",
+    collateralAmount: "Kiasi cha dhamana (tARC)", depositBtn: "Weka Dhamana", withdrawBtn: "Toa Dhamana",
+    borrowBtn: "Kopa", repayBtn: "Lipa",
+    yourCollateral: "Salio lako la dhamana", yourDebt: "Deni lako", maxBorrow: "Kiwango cha juu unachoweza kukopa (66%)",
+    swapTitle: "Kubadilisha", swapDesc: "tARC ⇄ tUSD, bwawa la x·y=k, ada ya 0.3%",
+    amountToGive: "Kiasi cha kutoa", swapBtn: "Badilisha",
+    youWillGet: "Utapata", poolArc: "tARC kwenye bwawa", poolUsd: "tUSD kwenye bwawa",
+    swapHint: "Idhini ya matumizi ya tokeni husika huombwa kiotomatiki kabla ya kubadilisha.",
+    noWallet: "Hakuna programu-jalizi ya pochi iliyopatikana kwenye kivinjari hiki (Rabby/MetaMask).",
+    connErr: "Hitilafu ya muunganisho: ", invalidAmt: "Weka kiasi sahihi.",
+    approvingFor: " idhini inaombwa…",
+    sendingStake: "Inatuma muamala wa kuweka dau…", stakeOk: "Kuweka dau kumefanikiwa.",
+    sendingUnstake: "Inatuma muamala wa kutoa dau…", unstakeOk: "Kutoa dau kumefanikiwa.",
+    depositing: "Inaweka dhamana…", depositOk: "Dhamana imewekwa.",
+    withdrawing: "Inatoa dhamana…", withdrawOk: "Dhamana imetolewa.",
+    borrowing: "Inakopa…", borrowOk: "Kukopa kumefanikiwa.",
+    repaying: "Inalipa…", repayOk: "Malipo yamefanikiwa.",
+    swappingAB: "Inatuma ubadilishaji (tARC → tUSD)…", swappingBA: "Inatuma ubadilishaji (tUSD → tARC)…",
+    swapOk: "Ubadilishaji umefanikiwa.", txFailed: "Muamala umeshindwa: ",
+    stakeLabel: "kuweka dau", depositLabel: "kuweka dhamana", repayLabel: "malipo",
+    swapALabel: "kubadilisha (tARC)", swapBLabel: "kubadilisha (tUSD)",
+    lbTitle: "Ubao wa Viongozi", lbDesc: "Pochi zenye shughuli nyingi zaidi (staking, ukopeshaji, ubadilishaji, faucet)", lbSortCount: "Idadi ya Vitendo", lbSortVolume: "Kiasi", lbSortReward: "Kiasi cha Zawadi", lbColVolume: "Kiasi (tARC+tUSD)", lbColReward: "Zawadi (tARC)",
+    lbLoading: "Inasoma miamala kutoka kwenye mnyororo…", lbRank: "Nafasi", lbWallet: "Pochi", lbActions: "Idadi ya Vitendo",
+    lbYou: " (wewe)",
+  }
+};
+let LANG = localStorage.getItem('lang') || 'tr';
+
+function applyI18n(){
+  const dict = I18N[LANG];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    if(dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-ph');
+    if(dict[key] !== undefined) el.setAttribute('placeholder', dict[key]);
+  });
+  document.querySelectorAll('[data-preview]').forEach(el=>{
+    const key = el.getAttribute('data-preview');
+    if(dict[key] !== undefined) el.setAttribute('data-preview-text', dict[key]);
+  });
+  document.querySelectorAll('#langbar button').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-lang') === LANG);
+  });
+  document.documentElement.lang = LANG;
+  if(account) updateAcctInfo();
+  if(Object.keys(lbLastCounts).length || Object.keys(lbLastVolume).length || Object.keys(lbLastReward).length) renderLeaderboard();
+}
+document.getElementById('langbar').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-lang]');
+  if(!btn) return;
+  LANG = btn.getAttribute('data-lang');
+  localStorage.setItem('lang', LANG);
+  applyI18n();
+});
+
+/* ---------- Constants ---------- */
+const ADDR = {
+  tARC:      "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
+  tUSD:      "0xb0A5E94Ed394E60B40016c5952857ADBeF164BFD",
+  Staking:   "0x4AC964e24e7b02A5488A4AFF104b0b31C486aB93",
+  Lending:   "0xB110581094d615837b2F7ECf45ed75Bc2F083774",
+  Swap:      "0x8d6AA00182b71637ec8a03549f1f8F02909d9613",
+  Faucet:    "0x9Fa05f0105CF1cba44493eAf67374a1F73dEc176",
+  Streaming: "0x1003e5DBf043A3BC5ca6A48fb54017B330065945",
+  Escrow:    "0xaD9115aA0d4BEbA4EBa3660623E2790122d12833",
+  MultiSig:  "0x57439F6a623eC8C4d56B286dB22e71b2a99DEA81",
+  Badges:    "0x6b902c7E6811FACBAf47A19b2410122D92bB0561"
+};
+
+const ERC20_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function decimals() view returns (uint8)"
+];
+const STAKING_ABI = [
+  "function stake(uint256 amount)",
+  "function unstake()",
+  "function stakedBalance(address) view returns (uint256)",
+  "function calculateReward(address) view returns (uint256)"
+];
+const LENDING_ABI = [
+  "function depositCollateral(uint256 amount)",
+  "function withdrawCollateral(uint256 amount)",
+  "function borrow(uint256 amount)",
+  "function repay(uint256 amount)",
+  "function collateralBalance(address) view returns (uint256)",
+  "function borrowedBalance(address) view returns (uint256)",
+  "function COLLATERAL_FACTOR() view returns (uint256)"
+];
+const SWAP_ABI = [
+  "function addLiquidity(uint256 amountA, uint256 amountB)",
+  "function swapAforB(uint256 amountAIn)",
+  "function swapBforA(uint256 amountBIn)",
+  "function reserveA() view returns (uint256)",
+  "function reserveB() view returns (uint256)",
+  "function getAmountOut(uint256 amountIn, uint256 reserveIn, uint256 reserveOut) view returns (uint256)"
+];
+const FAUCET_ABI = [
+  "function claim()",
+  "function timeUntilNextClaim(address) view returns (uint256)"
+];
+const STREAMING_ABI = [
+  "function createStream(address recipient, uint256 totalAmount, uint256 durationSeconds) returns (uint256)",
+  "function withdraw(uint256 streamId)",
+  "function cancelStream(uint256 streamId)",
+  "function withdrawable(uint256 streamId) view returns (uint256)",
+  "function getStream(uint256 streamId) view returns (address,address,uint256,uint256,uint256,uint256,bool)",
+  "function nextStreamId() view returns (uint256)"
+];
+const ESCROW_ABI = [
+  "function createDeal(address beneficiary, address arbiter, uint256 amount) returns (uint256)",
+  "function release(uint256 dealId)",
+  "function refund(uint256 dealId)",
+  "function getDeal(uint256 dealId) view returns (address,address,address,uint256,uint8)",
+  "function nextDealId() view returns (uint256)"
+];
+const MULTISIG_ABI = [
+  "function deposit(uint256 amount)",
+  "function proposeTransfer(address to, uint256 amount) returns (uint256)",
+  "function confirm(uint256 proposalId)",
+  "function proposals(uint256) view returns (address to, uint256 amount, uint256 confirmations, bool executed)",
+  "function proposalsCount() view returns (uint256)",
+  "function required() view returns (uint256)",
+  "function ownersCount() view returns (uint256)",
+  "function isOwner(address) view returns (bool)"
+];
+const BADGES_ABI = [
+  "function claimFaucetBadge()",
+  "function claimStakerBadge()",
+  "function claimBorrowerBadge()",
+  "function getBadges(address) view returns (bool,bool,bool)"
+];
+
+/* Event tanımları: leaderboard için hem eşleştirme (topic) hem decode amaçlı isimli parametreler içeriyor */
+const LB_EVENTS = [
+  { addr: ADDR.Staking, sig: "Staked(address,uint256)", frag: "event Staked(address indexed user, uint256 amount)", volumeField: "amount" },
+  { addr: ADDR.Staking, sig: "Unstaked(address,uint256,uint256)", frag: "event Unstaked(address indexed user, uint256 amount, uint256 reward)", volumeField: "amount", rewardField: "reward" },
+  { addr: ADDR.Lending, sig: "Deposited(address,uint256)", frag: "event Deposited(address indexed user, uint256 amount)", volumeField: "amount" },
+  { addr: ADDR.Lending, sig: "Withdrawn(address,uint256)", frag: "event Withdrawn(address indexed user, uint256 amount)", volumeField: "amount" },
+  { addr: ADDR.Lending, sig: "Borrowed(address,uint256)", frag: "event Borrowed(address indexed user, uint256 amount)", volumeField: "amount" },
+  { addr: ADDR.Lending, sig: "Repaid(address,uint256)", frag: "event Repaid(address indexed user, uint256 amount)", volumeField: "amount" },
+  { addr: ADDR.Swap, sig: "Swapped(address,address,uint256,uint256)", frag: "event Swapped(address indexed user, address tokenIn, uint256 amountIn, uint256 amountOut)", volumeField: "amountIn" },
+  { addr: ADDR.Faucet, sig: "Claimed(address,uint256,uint256,uint256)", frag: "event Claimed(address indexed user, uint256 amountA, uint256 amountB, uint256 timestamp)", volumeField: null }
+];
+let lbSortMode = "count"; // count | volume | reward
+let lbLastCounts = {}, lbLastVolume = {}, lbLastReward = {};
+
+let provider, signer, account;
+let tARC, tUSD, staking, lending, swap, faucet, streaming, escrow, multisig, badges;
+let swapDir = "AtoB";
+let lastNetworkOnArc = null;
+
+/* ---------- Helpers ---------- */
+function log(msg, type){
+  const el = document.getElementById('log');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(window.__logT);
+  window.__logT = setTimeout(()=>{ el.className=''; }, 7000);
+}
+function fmt(bn){
+  try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString(undefined, {maximumFractionDigits: 4}); }
+  catch(e){ return "—"; }
+}
+function toWei(v){ return ethers.utils.parseUnits(String(v || "0"), 18); }
+async function ensureApproval(token, spender, amountWei, labelKey){
+  const allowance = await token.allowance(account, spender);
+  if(allowance.lt(amountWei)){
+    log(I18N[LANG][labelKey] + I18N[LANG].approvingFor);
+    const tx = await token.approve(spender, ethers.constants.MaxUint256);
+    await tx.wait();
+  }
+}
+function updateAcctInfo(){
+  const acctInfo = document.getElementById('acctInfo');
+  const short = account.slice(0,6) + "…" + account.slice(-4);
+  acctInfo.innerHTML = short + '<br/><span class="netbadge ' + (lastNetworkOnArc?'':'bad') + '">' +
+    (lastNetworkOnArc ? I18N[LANG].onArc : I18N[LANG].wrongNetwork) + '</span>';
+}
+
+/* ---------- Network switch ---------- */
+async function switchNetwork(){
+  if(!window.ethereum) return;
+  const hexChainId = "0x" + (5042002).toString(16);
+  try{
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: hexChainId }]
+    });
+  }catch(switchError){
+    if(switchError.code === 4902){
+      try{
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: hexChainId,
+            chainName: 'Arc Network Testnet',
+            nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
+            rpcUrls: ['https://rpc.testnet.arc.network'],
+            blockExplorerUrls: ['https://testnet.arcscan.app']
+          }]
+        });
+      }catch(addError){
+        log(I18N[LANG].connErr + (addError.message || addError), "err");
+        return;
+      }
+    } else {
+      log(I18N[LANG].connErr + (switchError.message || switchError), "err");
+      return;
+    }
+  }
+  window.location.reload();
+}
+
+/* ---------- Connection ---------- */
+async function connect(){
+  if(!window.ethereum){
+    log(I18N[LANG].noWallet, "err");
+    return;
+  }
+  try{
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    account = await signer.getAddress();
+
+    const network = await provider.getNetwork();
+    lastNetworkOnArc = network.chainId === 5042002;
+    updateAcctInfo();
+    document.getElementById('switchNetBtn').style.display = lastNetworkOnArc ? 'none' : 'inline-block';
+
+    tARC    = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
+    tUSD    = new ethers.Contract(ADDR.tUSD, ERC20_ABI, signer);
+    staking = new ethers.Contract(ADDR.Staking, STAKING_ABI, signer);
+    lending = new ethers.Contract(ADDR.Lending, LENDING_ABI, signer);
+    swap    = new ethers.Contract(ADDR.Swap, SWAP_ABI, signer);
+    faucet  = new ethers.Contract(ADDR.Faucet, FAUCET_ABI, signer);
+    streaming = new ethers.Contract(ADDR.Streaming, STREAMING_ABI, signer);
+    escrow    = new ethers.Contract(ADDR.Escrow, ESCROW_ABI, signer);
+    multisig  = new ethers.Contract(ADDR.MultiSig, MULTISIG_ABI, signer);
+    badges    = new ethers.Contract(ADDR.Badges, BADGES_ABI, signer);
+
+    document.getElementById('connectBtn').textContent = I18N[LANG].connected;
+    document.getElementById('connectBtn').disabled = true;
+
+    await refreshAll();
+    await new Promise(r => setTimeout(r, 500));
+    await refreshClaimStatus();
+    window.ethereum.on('accountsChanged', () => window.location.reload());
+    window.ethereum.on('chainChanged', () => window.location.reload());
+  }catch(e){
+    log(I18N[LANG].connErr + (e.message || e), "err");
+  }
+}
+
+/* ---------- Read data ---------- */
+async function refreshAll(){
+  if(!account) return;
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  const safeCall = async (fn) => {
+    for(let attempt = 0; attempt < 3; attempt++){
+      try{ return await fn(); }
+      catch(e){
+        if(attempt < 2){ await wait(1500 * (attempt + 1)); continue; }
+        console.error(e);
+        return null;
+      }
+    }
+  };
+  try{
+    const bArc = await safeCall(() => tARC.balanceOf(account)); await wait(150);
+    const bUsd = await safeCall(() => tUSD.balanceOf(account)); await wait(150);
+    const staked = await safeCall(() => staking.stakedBalance(account)); await wait(150);
+    const reward = await safeCall(() => staking.calculateReward(account)); await wait(150);
+    const coll = await safeCall(() => lending.collateralBalance(account)); await wait(150);
+    const borrowed = await safeCall(() => lending.borrowedBalance(account)); await wait(150);
+    const factor = await safeCall(() => lending.COLLATERAL_FACTOR()); await wait(150);
+    const rA = await safeCall(() => swap.reserveA()); await wait(150);
+    const rB = await safeCall(() => swap.reserveB());
+
+    if(bArc) document.getElementById('balARC').textContent = fmt(bArc);
+    if(bUsd) document.getElementById('balUSD').textContent = fmt(bUsd);
+    if(staked) document.getElementById('balStaked').textContent = fmt(staked);
+    if(reward) document.getElementById('balReward').textContent = fmt(reward);
+
+    if(staked) document.getElementById('stStaked').textContent = fmt(staked) + " tARC";
+    if(reward) document.getElementById('stReward').textContent = fmt(reward) + " tARC";
+
+    if(coll) document.getElementById('lnColl').textContent = fmt(coll) + " tARC";
+    if(borrowed) document.getElementById('lnBorrow').textContent = fmt(borrowed) + " tARC";
+    if(coll && factor){
+      const maxBorrow = coll.mul(factor).div(100);
+      document.getElementById('lnMax').textContent = fmt(maxBorrow) + " tARC";
+    }
+
+    if(rA) document.getElementById('swReserveA').textContent = fmt(rA) + " tARC";
+    if(rB) document.getElementById('swReserveB').textContent = fmt(rB) + " tUSD";
+  }catch(e){
+    console.error(e);
+  }
+}
+
+/* ---------- Faucet ---------- */
+function fmtDuration(seconds){
+  const s = Number(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h + I18N[LANG].hoursShort + " " + m + I18N[LANG].minutesShort;
+}
+async function refreshClaimStatus(){
+  if(!account || !faucet) return;
+  try{
+    const wait = await faucet.timeUntilNextClaim(account);
+    const statusEl = document.getElementById('claimStatus');
+    const btn = document.getElementById('btnClaim');
+    if(wait.eq(0)){
+      statusEl.textContent = I18N[LANG].claimReady;
+      btn.disabled = false;
+    } else {
+      statusEl.textContent = I18N[LANG].claimWait + fmtDuration(wait.toString());
+      btn.disabled = true;
+    }
+  }catch(e){ console.error(e); }
+}
+async function doClaim(){
+  if(!account){ log(I18N[LANG].noWallet, "err"); return; }
+  try{
+    log(I18N[LANG].claiming);
+    const tx = await faucet.claim();
+    await tx.wait();
+    log(I18N[LANG].claimOk, "ok");
+    await refreshAll();
+    await refreshClaimStatus();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- Leaderboard ---------- */
+async function loadLeaderboard(){
+  const loadingEl = document.getElementById('lbLoading');
+  const tableEl = document.getElementById('lbTable');
+  const bodyEl = document.getElementById('lbBody');
+  try{
+    // Ayrı bir RPC bağlantısı kullanılıyor ki cüzdanın (Rabby) bakiye sorgularıyla aynı istek kotasını paylaşmasın
+    const rp = new ethers.providers.JsonRpcProvider("https://rpc.testnet.arc.network");
+    const counts = {}, volume = {}, reward = {};
+    const currentBlock = await rp.getBlockNumber();
+    const fromBlock = Math.max(0, currentBlock - 9000); // RPC 10k blok / rate-limit sınırına takılmamak için son ~9000 blokla sınırlı
+
+    for(const ev of LB_EVENTS){
+      const iface = new ethers.utils.Interface([ev.frag]);
+      const topic = ethers.utils.id(ev.sig);
+      let logs = [];
+      try{
+        logs = await rp.getLogs({
+          address: ev.addr,
+          fromBlock: fromBlock,
+          toBlock: currentBlock,
+          topics: [topic]
+        });
+      }catch(e){ console.error("log fetch failed for", ev.sig, e); continue; }
+
+      for(const l of logs){
+        if(l.topics.length < 2) continue;
+        const addr = ethers.utils.getAddress("0x" + l.topics[1].slice(26));
+        counts[addr] = (counts[addr] || 0) + 1;
+        try{
+          const parsed = iface.parseLog(l);
+          if(ev.volumeField && parsed.args[ev.volumeField]){
+            const v = parsed.args[ev.volumeField];
+            volume[addr] = (volume[addr] || ethers.BigNumber.from(0)).add(v);
+          }
+          if(ev.rewardField && parsed.args[ev.rewardField]){
+            const r = parsed.args[ev.rewardField];
+            reward[addr] = (reward[addr] || ethers.BigNumber.from(0)).add(r);
+          }
+        }catch(e){ /* decode hatası - o log'u atla */ }
+      }
+      await new Promise(r => setTimeout(r, 250)); // RPC'yi art arda yormamak için küçük bekleme
+    }
+
+    lbLastCounts = counts; lbLastVolume = volume; lbLastReward = reward;
+    renderLeaderboard();
+    loadingEl.style.display = 'none';
+  }catch(e){
+    console.error(e);
+    loadingEl.textContent = '—';
+  }
+}
+
+function renderLeaderboard(){
+  const loadingEl = document.getElementById('lbLoading');
+  const tableEl = document.getElementById('lbTable');
+  const bodyEl = document.getElementById('lbBody');
+  const colHeaderEl = document.getElementById('lbColHeader');
+
+  let source, colKey, formatVal;
+  if(lbSortMode === 'volume'){
+    source = lbLastVolume; colKey = 'lbColVolume';
+    formatVal = (v) => fmt(v);
+  } else if(lbSortMode === 'reward'){
+    source = lbLastReward; colKey = 'lbColReward';
+    formatVal = (v) => fmt(v);
+  } else {
+    source = lbLastCounts; colKey = 'lbActions';
+    formatVal = (v) => String(v);
+  }
+  colHeaderEl.textContent = I18N[LANG][colKey];
+
+  const entries = Object.entries(source).filter(([,v]) => v && (typeof v === 'number' ? v > 0 : !v.isZero()));
+  const ranked = entries.sort((a,b) => {
+    if(typeof a[1] === 'number') return b[1] - a[1];
+    return b[1].gt(a[1]) ? 1 : (b[1].lt(a[1]) ? -1 : 0);
+  }).slice(0, 15);
+
+  bodyEl.innerHTML = "";
+  ranked.forEach(([addr, val], i) => {
+    const isYou = account && addr.toLowerCase() === account.toLowerCase();
+    const tr = document.createElement('tr');
+    if(isYou) tr.className = 'you';
+    const short = addr.slice(0,6) + "…" + addr.slice(-4) + (isYou ? I18N[LANG].lbYou : "");
+    tr.innerHTML = '<td class="rank">#' + (i+1) + '</td><td class="addr">' + short + '</td><td>' + formatVal(val) + '</td>';
+    bodyEl.appendChild(tr);
+  });
+
+  tableEl.style.display = ranked.length ? 'table' : 'none';
+  if(!ranked.length){
+    loadingEl.style.display = 'block';
+    loadingEl.textContent = '—';
+  } else {
+    loadingEl.style.display = 'none';
+  }
+}
+
+/* ---------- Staking actions ---------- */
+async function doStake(){
+  const amt = document.getElementById('stakeAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(tARC, ADDR.Staking, wei, "stakeLabel");
+    log(I18N[LANG].sendingStake);
+    const tx = await staking.stake(wei);
+    await tx.wait();
+    log(I18N[LANG].stakeOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doUnstake(){
+  try{
+    log(I18N[LANG].sendingUnstake);
+    const tx = await staking.unstake();
+    await tx.wait();
+    log(I18N[LANG].unstakeOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- Lending actions ---------- */
+async function doDeposit(){
+  const amt = document.getElementById('collAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(tARC, ADDR.Lending, wei, "depositLabel");
+    log(I18N[LANG].depositing);
+    const tx = await lending.depositCollateral(wei);
+    await tx.wait();
+    log(I18N[LANG].depositOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doWithdraw(){
+  const amt = document.getElementById('collAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].withdrawing);
+    const tx = await lending.withdrawCollateral(toWei(amt));
+    await tx.wait();
+    log(I18N[LANG].withdrawOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doBorrow(){
+  const amt = document.getElementById('borrowAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].borrowing);
+    const tx = await lending.borrow(toWei(amt));
+    await tx.wait();
+    log(I18N[LANG].borrowOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doRepay(){
+  const amt = document.getElementById('borrowAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(tARC, ADDR.Lending, wei, "repayLabel");
+    log(I18N[LANG].repaying);
+    const tx = await lending.repay(wei);
+    await tx.wait();
+    log(I18N[LANG].repayOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- Swap actions ---------- */
+function setDir(dir){
+  swapDir = dir;
+  document.getElementById('dirAtoB').classList.toggle('active', dir === 'AtoB');
+  document.getElementById('dirBtoA').classList.toggle('active', dir === 'BtoA');
+  updateSwapPreview();
+}
+let swapPreviewTimer = null;
+function updateSwapPreview(){
+  clearTimeout(swapPreviewTimer);
+  swapPreviewTimer = setTimeout(async () => {
+    const previewEl = document.getElementById('swapPreview');
+    const amt = document.getElementById('swapAmt').value;
+    if(!swap || !amt || Number(amt) <= 0){ previewEl.textContent = "—"; return; }
+    try{
+      const wei = toWei(amt);
+      const [rA, rB] = await Promise.all([swap.reserveA(), swap.reserveB()]);
+      let out;
+      if(swapDir === 'AtoB'){
+        out = await swap.getAmountOut(wei, rA, rB);
+        previewEl.textContent = "≈ " + fmt(out) + " tUSD";
+      } else {
+        out = await swap.getAmountOut(wei, rB, rA);
+        previewEl.textContent = "≈ " + fmt(out) + " tARC";
+      }
+    }catch(e){ previewEl.textContent = "—"; }
+  }, 400);
+}
+async function doSwap(){
+  const amt = document.getElementById('swapAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    if(swapDir === 'AtoB'){
+      await ensureApproval(tARC, ADDR.Swap, wei, "swapALabel");
+      log(I18N[LANG].swappingAB);
+      const tx = await swap.swapAforB(wei);
+      await tx.wait();
+    } else {
+      await ensureApproval(tUSD, ADDR.Swap, wei, "swapBLabel");
+      log(I18N[LANG].swappingBA);
+      const tx = await swap.swapBforA(wei);
+      await tx.wait();
+    }
+    log(I18N[LANG].swapOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- Streaming ---------- */
+async function doCreateStream(){
+  const recipient = document.getElementById('streamRecipient').value.trim();
+  const amt = document.getElementById('streamAmount').value;
+  const dur = document.getElementById('streamDuration').value;
+  if(!ethers.utils.isAddress(recipient)){ log(I18N[LANG].invalidAddr, "err"); return; }
+  if(!amt || Number(amt) <= 0 || !dur || Number(dur) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(tARC, ADDR.Streaming, wei, "streamLabel");
+    log(I18N[LANG].streamCreating);
+    const tx = await streaming.createStream(recipient, wei, Math.floor(Number(dur)));
+    await tx.wait();
+    log(I18N[LANG].streamCreated, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doStreamCheck(){
+  const id = document.getElementById('streamIdInput').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const w = await streaming.withdrawable(id);
+    document.getElementById('streamWithdrawable').textContent = fmt(w) + " tARC";
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doStreamWithdraw(){
+  const id = document.getElementById('streamIdInput').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].streamWithdrawing);
+    const tx = await streaming.withdraw(id);
+    await tx.wait();
+    log(I18N[LANG].streamWithdrawOk, "ok");
+    await refreshAll();
+    await doStreamCheck();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doStreamCancel(){
+  const id = document.getElementById('streamIdInput').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].streamCancelling);
+    const tx = await streaming.cancelStream(id);
+    await tx.wait();
+    log(I18N[LANG].streamCancelOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- Escrow ---------- */
+async function doCreateDeal(){
+  const beneficiary = document.getElementById('escrowBeneficiary').value.trim();
+  const arbiter = document.getElementById('escrowArbiter').value.trim();
+  const amt = document.getElementById('escrowAmount').value;
+  if(!ethers.utils.isAddress(beneficiary) || !ethers.utils.isAddress(arbiter)){ log(I18N[LANG].invalidAddr, "err"); return; }
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(tARC, ADDR.Escrow, wei, "escrowLabel");
+    log(I18N[LANG].dealCreating);
+    const tx = await escrow.createDeal(beneficiary, arbiter, wei);
+    await tx.wait();
+    log(I18N[LANG].dealCreated, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+const ESCROW_STATUS = ["Active", "Released", "Refunded"];
+async function doDealCheck(){
+  const id = document.getElementById('dealIdInput').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const d = await escrow.getDeal(id);
+    document.getElementById('dealStatusVal').textContent = fmt(d[3]) + " tARC — " + ESCROW_STATUS[d[4]];
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doDealRelease(){
+  const id = document.getElementById('dealIdInput').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].dealReleasing);
+    const tx = await escrow.release(id);
+    await tx.wait();
+    log(I18N[LANG].dealReleased, "ok");
+    await refreshAll();
+    await doDealCheck();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doDealRefund(){
+  const id = document.getElementById('dealIdInput').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].dealRefunding);
+    const tx = await escrow.refund(id);
+    await tx.wait();
+    log(I18N[LANG].dealRefunded, "ok");
+    await refreshAll();
+    await doDealCheck();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- MultiSig ---------- */
+async function doMsigDeposit(){
+  const amt = document.getElementById('msigDepositAmt').value;
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(tARC, ADDR.MultiSig, wei, "msigLabel");
+    log(I18N[LANG].msigDepositing);
+    const tx = await multisig.deposit(wei);
+    await tx.wait();
+    log(I18N[LANG].msigDepositOk, "ok");
+    await refreshAll();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doMsigPropose(){
+  const to = document.getElementById('msigTo').value.trim();
+  const amt = document.getElementById('msigAmount').value;
+  if(!ethers.utils.isAddress(to)){ log(I18N[LANG].invalidAddr, "err"); return; }
+  if(!amt || Number(amt) <= 0){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].msigProposing);
+    const tx = await multisig.proposeTransfer(to, toWei(amt));
+    await tx.wait();
+    log(I18N[LANG].msigProposed, "ok");
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doMsigCheck(){
+  try{
+    const req = await multisig.required();
+    document.getElementById('msigRequiredVal').textContent = req.toString();
+    const id = document.getElementById('msigProposalId').value;
+    if(id !== "" && id !== null){
+      const p = await multisig.proposals(id);
+      document.getElementById('msigProposalVal').textContent =
+        p.to.slice(0,6) + "…" + p.to.slice(-4) + " · " + fmt(p.amount) + " tARC · " +
+        p.confirmations.toString() + "/" + req.toString() + (p.executed ? " ✓" : "");
+    }
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+async function doMsigConfirm(){
+  const id = document.getElementById('msigProposalId').value;
+  if(id === "" || id === null){ log(I18N[LANG].invalidAmt, "err"); return; }
+  try{
+    log(I18N[LANG].msigConfirming);
+    const tx = await multisig.confirm(id);
+    await tx.wait();
+    log(I18N[LANG].msigConfirmed, "ok");
+    await doMsigCheck();
+  }catch(e){ log(I18N[LANG].txFailed + (e.reason || e.message || e), "err"); }
+}
+
+/* ---------- Events ---------- */
+document.getElementById('connectBtn').addEventListener('click', connect);
+document.getElementById('switchNetBtn').addEventListener('click', switchNetwork);
+document.getElementById('btnRefresh').addEventListener('click', () => { if(account){ refreshAll(); refreshClaimStatus(); } });
+document.getElementById('btnClaim').addEventListener('click', doClaim);
+document.getElementById('btnStake').addEventListener('click', doStake);
+document.getElementById('btnUnstake').addEventListener('click', doUnstake);
+document.getElementById('btnDeposit').addEventListener('click', doDeposit);
+document.getElementById('btnWithdraw').addEventListener('click', doWithdraw);
+document.getElementById('btnBorrow').addEventListener('click', doBorrow);
+document.getElementById('btnRepay').addEventListener('click', doRepay);
+document.getElementById('btnSwap').addEventListener('click', doSwap);
+document.getElementById('dirAtoB').addEventListener('click', () => setDir('AtoB'));
+document.getElementById('dirBtoA').addEventListener('click', () => setDir('BtoA'));
+document.getElementById('swapAmt').addEventListener('input', updateSwapPreview);
+
+document.getElementById('btnCreateStream').addEventListener('click', doCreateStream);
+document.getElementById('btnStreamCheck').addEventListener('click', doStreamCheck);
+document.getElementById('btnStreamWithdraw').addEventListener('click', doStreamWithdraw);
+document.getElementById('btnStreamCancel').addEventListener('click', doStreamCancel);
+
+document.getElementById('btnCreateDeal').addEventListener('click', doCreateDeal);
+document.getElementById('btnDealCheck').addEventListener('click', doDealCheck);
+document.getElementById('btnDealRelease').addEventListener('click', doDealRelease);
+document.getElementById('btnDealRefund').addEventListener('click', doDealRefund);
+
+document.getElementById('btnMsigDeposit').addEventListener('click', doMsigDeposit);
+document.getElementById('btnMsigPropose').addEventListener('click', doMsigPropose);
+document.getElementById('btnMsigCheck').addEventListener('click', doMsigCheck);
+document.getElementById('btnMsigConfirm').addEventListener('click', doMsigConfirm);
+
+/* ---------- Sidenav scroll-spy ---------- */
+(function(){
+  const links = document.querySelectorAll('.sidenav a');
+  const sections = Array.from(links).map(a => document.getElementById(a.getAttribute('data-target'))).filter(Boolean);
+  if(!sections.length) return;
+  const setActive = (id) => {
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('data-target') === id));
+  };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) setActive(entry.target.id);
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+  setActive(sections[0].id);
+})();
+
+applyI18n();
+setInterval(() => { if(account){ refreshAll(); refreshClaimStatus(); } }, 45000);
+</script>
+</body>
+</html>
