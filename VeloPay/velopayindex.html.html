@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VeloPay — StableLab</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fa; --surface:#ffffff; --surface-alt:#eef2f8; --border:#dde3ec;
+    --text:#0f1b2d; --text-mute:#5b6b82; --text-faint:#8a97ab;
+    --primary:#2f5fe0; --primary-dark:#1e3fa8; --primary-soft:#e8edfc;
+    --ok:#0f9d58; --err:#d33b2c; --radius:10px;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px;}
+  a.back{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none; margin-bottom:20px; }
+  a.back:hover{ color:var(--primary); }
+
+  .hero{ margin-bottom:28px; }
+  .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
+  h1{ font-size:32px; font-weight:800; margin:0 0 10px; letter-spacing:-0.02em; }
+  .lede{ font-size:14.5px; color:var(--text-mute); max-width:60ch; line-height:1.65; }
+
+  .flow-demo{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; margin:24px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  }
+  .flow-step{
+    background:var(--surface-alt); border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; color:var(--text);
+    text-align:center; flex:1; min-width:110px;
+  }
+  .flow-step .big{ font-family:var(--mono); font-size:15px; font-weight:700; color:var(--primary-dark); display:block; margin-top:2px; }
+  .flow-arrow{ color:var(--text-faint); font-size:16px; }
+
+  .howcard{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1px;
+    background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:28px 0;
+  }
+  .howstep{ background:var(--surface); padding:18px; }
+  .howstep .num{ font-size:11px; font-weight:800; color:var(--primary); margin-bottom:6px; }
+  .howstep .title{ font-weight:700; font-size:13px; margin-bottom:4px; }
+  .howstep .desc{ font-size:12px; color:var(--text-mute); line-height:1.5; }
+
+  .usecase{
+    background:var(--primary-soft); border:1px solid #d3ddfa; border-radius:var(--radius);
+    padding:16px 20px; margin-bottom:28px; font-size:13px; color:#33447a; line-height:1.6;
+  }
+  .usecase b{ color:var(--primary-dark); }
+
+  .section{ border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:0 1px 2px rgba(15,27,45,0.04); margin-bottom:20px; }
+  .section .head{ padding:14px 20px; border-bottom:1px solid var(--border); background:var(--surface-alt); font-weight:700; font-size:14.5px; }
+  .body{ padding:20px; }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .row:last-child{margin-bottom:0;}
+  input[type=text], input[type=number]{
+    font-family:var(--sans); font-size:13.5px; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:10px 13px; flex:1; min-width:140px; color:var(--text);
+  }
+  input:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
+  .act{ font-family:var(--sans); font-size:12.5px; font-weight:600; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:9px 14px; cursor:pointer; }
+  .act:hover{ background:var(--surface-alt); border-color:var(--primary); }
+  .act.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+  .act.primary:hover{ background:var(--primary-dark); }
+  .hint{ font-size:11.5px; color:var(--text-faint); margin-top:10px; }
+  .stat-line{ display:flex; justify-content:space-between; font-size:12.5px; padding:8px 0; border-bottom:1px solid var(--surface-alt); }
+  .stat-line:last-of-type{ border-bottom:none; }
+  .stat-line .k{ color:var(--text-mute); }
+  .stat-line .v{ font-weight:700; font-family:var(--mono); font-size:12px; }
+
+  #connectBtn{ font-family:var(--sans); font-weight:600; font-size:13px; background:var(--primary); color:#fff; border:none; border-radius:8px; padding:10px 18px; cursor:pointer; }
+  #connectBtn:hover{ background:var(--primary-dark); }
+  #connectBtn:disabled{ opacity:.6; }
+  .acct{ font-size:11.5px; color:var(--text-mute); font-family:var(--mono); margin-top:6px; }
+
+  #log{ position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--text); color:#fff; border-radius:8px; font-size:12.5px; padding:11px 20px; display:none; z-index:50; box-shadow:0 4px 16px rgba(15,27,45,0.25); max-width:90vw; }
+  #log.show{display:block;}
+  #log.err{background:var(--err);}
+  #log.ok{background:var(--ok);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../">← StableLab'a Dön</a>
+
+  <div class="hero">
+    <div class="eyebrow">StableLab · VeloPay Modülü</div>
+    <h1>Faturanı bekleme, bugün nakde çevir</h1>
+    <div class="lede">
+      Invoice Factoring (fatura faktoringi), dünya çapında milyarlarca dolarlık bir finans sektörü — serbest çalışanların ve işletmelerin vadeli faturalarını anında nakde çevirmesini sağlar. Bu iş için <b>VeloPay'i sizin için tasarladık.</b>
+    </div>
+  </div>
+
+  <div class="flow-demo">
+    <div class="flow-step">Fatura kesildi<span class="big">100 tARC</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Anında ödenen<span class="big">90 tARC</span></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">Vadede tahsil<span class="big">100 tARC (+gecikme varsa)</span></div>
+  </div>
+
+  <div class="usecase">
+    <b>Örnek senaryo:</b> Bir freelancer, küresel bir şirkete iş yapıyor ve faturasını 30 gün vadeyle kesiyor. Bu süre boyunca nakit akışı sıkıntısı yaşamak yerine, faturasını VeloPay'e yükler ve saniyeler içinde tutarın %90'ını cüzdanına alır. Vade günü geldiğinde şirket ödemeyi doğrudan havuza yapar; geç kalırsa günlük %0.1 gecikme bedeli işler. Likidite sağlayan yatırımcılar, bu farktan kazanç elde eder.
+  </div>
+
+  <div class="howcard">
+    <div class="howstep"><div class="num">01</div><div class="title">Havuza likidite</div><div class="desc">Yatırımcılar faturaları fonlayacak likiditeyi sağlar.</div></div>
+    <div class="howstep"><div class="num">02</div><div class="title">Fatura oluştur</div><div class="desc">Borçlu, tutar ve vade ile fatura kaydı açılır.</div></div>
+    <div class="howstep"><div class="num">03</div><div class="title">%90 anında öde</div><div class="desc">Tutarın büyük kısmı saniyeler içinde hesaba geçer.</div></div>
+    <div class="howstep"><div class="num">04</div><div class="title">Vadede tahsilat</div><div class="desc">Borçlu öder; geç kalırsa gecikme bedeli işler.</div></div>
+  </div>
+
+  <div style="margin-bottom:24px;">
+    <button id="connectBtn">Cüzdanı Bağla</button>
+    <div class="acct" id="acctInfo"></div>
+  </div>
+
+  <div class="section">
+    <div class="head">Havuza Likidite Ekle</div>
+    <div class="body">
+      <div class="row">
+        <input type="number" id="veloLiqAmt" placeholder="Miktar (tARC)" />
+        <button class="act primary" id="btnVeloAddLiq">Likidite Ekle</button>
+      </div>
+      <div class="hint">Havuza eklediğin tARC, faturaları fonlamak için kullanılır.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="head">Fatura Oluştur</div>
+    <div class="body">
+      <div class="row">
+        <input type="text" id="veloDebtor" placeholder="Borçlu adresi — 0x..." />
+      </div>
+      <div class="row">
+        <input type="number" id="veloFaceValue" placeholder="Fatura tutarı (tARC)" />
+        <input type="number" id="veloDueDate" placeholder="Vade (Unix zaman damgası)" />
+        <button class="act primary" id="btnCreateInvoice">Fatura Oluştur</button>
+      </div>
+      <div class="hint">Oluşturduğun anda tutarın %90'ı cüzdanına gönderilir.</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="head">Fatura Yönet</div>
+    <div class="body">
+      <div class="row">
+        <input type="number" id="veloInvoiceId" placeholder="Fatura ID" />
+        <button class="act" id="btnVeloCheck">Sorgula</button>
+        <button class="act primary" id="btnVeloRepay">Ödemeyi Yap</button>
+        <button class="act" id="btnVeloDefault">Temerrüt İşaretle</button>
+      </div>
+      <div class="stat-line"><span class="k">Şu an ödenmesi gereken tutar</span><span class="v" id="veloAmountDue">—</span></div>
+      <div class="stat-line"><span class="k">Fatura durumu</span><span class="v" id="veloStatus">—</span></div>
+      <div class="hint">Vade geçmişse günlük %0.1 gecikme bedeli otomatik hesaplanır. Vade + 7 gün geçip hâlâ ödenmemişse temerrüt işaretlenebilir.</div>
+    </div>
+  </div>
+</div>
+
+<div id="log"></div>
+
+<script>
+const ADDR = {
+  tARC:    "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
+  VeloPay: "0x417387F0FB246E3Afd2a25c3560FEC6Ce1f75729"
+};
+const ERC20_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)"
+];
+const VELOPAY_ABI = [
+  "function addLiquidity(uint256 amount)",
+  "function createInvoice(address debtor, uint256 faceValue, uint256 dueDate) returns (uint256)",
+  "function repayInvoice(uint256 id)",
+  "function markDefaulted(uint256 id)",
+  "function getAmountDue(uint256 id) view returns (uint256)",
+  "function getInvoice(uint256 id) view returns (address,address,uint256,uint256,uint256,bool,bool)"
+];
+const STATUS_LABELS = { repaid: "Ödendi", defaulted: "Temerrüt", open: "Açık" };
+
+let provider, signer, account, tARC, velopay;
+
+function log(msg, type){
+  const el = document.getElementById('log');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(window.__t);
+  window.__t = setTimeout(()=>{ el.className=''; }, 6000);
+}
+function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('tr-TR', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
+function toWei(v){ return ethers.utils.parseUnits(String(v || "0"), 18); }
+
+async function connect(){
+  if(!window.ethereum){ log("Cüzdan uzantısı bulunamadı (Rabby/MetaMask).", "err"); return; }
+  try{
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    account = await signer.getAddress();
+    document.getElementById('acctInfo').textContent = account.slice(0,6) + "…" + account.slice(-4);
+    tARC = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
+    velopay = new ethers.Contract(ADDR.VeloPay, VELOPAY_ABI, signer);
+    document.getElementById('connectBtn').textContent = "Bağlandı";
+    document.getElementById('connectBtn').disabled = true;
+  }catch(e){ log("Bağlantı hatası: " + (e.message || e), "err"); }
+}
+
+async function ensureApproval(amountWei){
+  const allowance = await tARC.allowance(account, ADDR.VeloPay);
+  if(allowance.lt(amountWei)){
+    log("İzin isteniyor…");
+    const tx = await tARC.approve(ADDR.VeloPay, ethers.constants.MaxUint256);
+    await tx.wait();
+  }
+}
+
+async function doVeloAddLiq(){
+  const amt = document.getElementById('veloLiqAmt').value;
+  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(wei);
+    log("Likidite ekleniyor…");
+    const tx = await velopay.addLiquidity(wei);
+    await tx.wait();
+    log("Likidite eklendi.", "ok");
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+
+async function doCreateInvoice(){
+  const debtor = document.getElementById('veloDebtor').value.trim();
+  const faceValue = document.getElementById('veloFaceValue').value;
+  const dueDate = document.getElementById('veloDueDate').value;
+  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
+  if(!ethers.utils.isAddress(debtor)){ log("Geçerli bir borçlu adresi gir.", "err"); return; }
+  if(!faceValue || Number(faceValue) <= 0 || !dueDate){ log("Geçerli tutar ve vade gir.", "err"); return; }
+  try{
+    log("Fatura oluşturuluyor…");
+    const tx = await velopay.createInvoice(debtor, toWei(faceValue), Math.floor(Number(dueDate)));
+    await tx.wait();
+    log("Fatura oluşturuldu, %90 hesabına gönderildi.", "ok");
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+
+async function doVeloCheck(){
+  const id = document.getElementById('veloInvoiceId').value;
+  if(id === "" || id === null){ log("Fatura ID gir.", "err"); return; }
+  try{
+    const due = await velopay.getAmountDue(id);
+    document.getElementById('veloAmountDue').textContent = fmt(due) + " tARC";
+    const inv = await velopay.getInvoice(id);
+    const repaid = inv[5], defaulted = inv[6];
+    document.getElementById('veloStatus').textContent = defaulted ? STATUS_LABELS.defaulted : (repaid ? STATUS_LABELS.repaid : STATUS_LABELS.open);
+  }catch(e){ log("Sorgu başarısız: " + (e.reason || e.message || e), "err"); }
+}
+
+async function doVeloRepay(){
+  const id = document.getElementById('veloInvoiceId').value;
+  if(id === "" || id === null){ log("Fatura ID gir.", "err"); return; }
+  try{
+    const due = await velopay.getAmountDue(id);
+    await ensureApproval(due);
+    log("Ödeme yapılıyor…");
+    const tx = await velopay.repayInvoice(id);
+    await tx.wait();
+    log("Ödeme başarılı.", "ok");
+    await doVeloCheck();
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+
+async function doVeloDefault(){
+  const id = document.getElementById('veloInvoiceId').value;
+  if(id === "" || id === null){ log("Fatura ID gir.", "err"); return; }
+  try{
+    log("Temerrüt işaretleniyor…");
+    const tx = await velopay.markDefaulted(id);
+    await tx.wait();
+    log("Temerrüt olarak işaretlendi.", "ok");
+    await doVeloCheck();
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+
+document.getElementById('connectBtn').addEventListener('click', connect);
+document.getElementById('btnVeloAddLiq').addEventListener('click', doVeloAddLiq);
+document.getElementById('btnCreateInvoice').addEventListener('click', doCreateInvoice);
+document.getElementById('btnVeloCheck').addEventListener('click', doVeloCheck);
+document.getElementById('btnVeloRepay').addEventListener('click', doVeloRepay);
+document.getElementById('btnVeloDefault').addEventListener('click', doVeloDefault);
+</script>
+</body>
+</html>
