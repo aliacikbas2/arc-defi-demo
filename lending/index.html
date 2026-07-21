@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lending — StableLab</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#f5f7fa; --surface:#ffffff; --surface-alt:#eef2f8; --border:#dde3ec;
+    --text:#0f1b2d; --text-mute:#5b6b82; --text-faint:#8a97ab;
+    --primary:#2f5fe0; --primary-dark:#1e3fa8; --primary-soft:#e8edfc;
+    --ok:#0f9d58; --err:#d33b2c; --radius:10px;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px;}
+  a.back{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none; margin-bottom:20px; }
+  a.back:hover{ color:var(--primary); }
+
+  .hero{ margin-bottom:28px; }
+  .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
+  h1{ font-size:32px; font-weight:800; margin:0 0 10px; letter-spacing:-0.02em; }
+  .lede{ font-size:14.5px; color:var(--text-mute); max-width:60ch; line-height:1.65; }
+
+  .howcard{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1px;
+    background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:28px 0;
+  }
+  .howstep{ background:var(--surface); padding:18px; }
+  .howstep .num{ font-size:11px; font-weight:800; color:var(--primary); margin-bottom:6px; }
+  .howstep .title{ font-weight:700; font-size:13px; margin-bottom:4px; }
+  .howstep .desc{ font-size:12px; color:var(--text-mute); line-height:1.5; }
+
+  .usecase{
+    background:var(--primary-soft); border:1px solid #d3ddfa; border-radius:var(--radius);
+    padding:16px 20px; margin-bottom:28px; font-size:13px; color:#33447a; line-height:1.6;
+  }
+  .usecase b{ color:var(--primary-dark); }
+
+  .section{ border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:0 1px 2px rgba(15,27,45,0.04); margin-bottom:20px; }
+  .section .head{ padding:14px 20px; border-bottom:1px solid var(--border); background:var(--surface-alt); font-weight:700; font-size:14.5px; }
+  .body{ padding:20px; }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .row:last-child{margin-bottom:0;}
+  input[type=text], input[type=number]{
+    font-family:var(--sans); font-size:13.5px; background:var(--surface); border:1px solid var(--border);
+    border-radius:8px; padding:10px 13px; flex:1; min-width:140px; color:var(--text);
+  }
+  input:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
+  .act{ font-family:var(--sans); font-size:12.5px; font-weight:600; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:9px 14px; cursor:pointer; }
+  .act:hover{ background:var(--surface-alt); border-color:var(--primary); }
+  .act.primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+  .act.primary:hover{ background:var(--primary-dark); }
+  .hint{ font-size:11.5px; color:var(--text-faint); margin-top:10px; }
+  .stat-line{ display:flex; justify-content:space-between; font-size:12.5px; padding:8px 0; border-bottom:1px solid var(--surface-alt); }
+  .stat-line:last-of-type{ border-bottom:none; }
+  .stat-line .k{ color:var(--text-mute); }
+  .stat-line .v{ font-weight:700; font-family:var(--mono); font-size:12px; }
+
+  #connectBtn{ font-family:var(--sans); font-weight:600; font-size:13px; background:var(--primary); color:#fff; border:none; border-radius:8px; padding:10px 18px; cursor:pointer; }
+  #connectBtn:hover{ background:var(--primary-dark); }
+  #connectBtn:disabled{ opacity:.6; }
+  .acct{ font-size:11.5px; color:var(--text-mute); font-family:var(--mono); margin-top:6px; }
+
+  #log{ position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--text); color:#fff; border-radius:8px; font-size:12.5px; padding:11px 20px; display:none; z-index:50; box-shadow:0 4px 16px rgba(15,27,45,0.25); max-width:90vw; }
+  #log.show{display:block;}
+  #log.err{background:var(--err);}
+  #log.ok{background:var(--ok);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../">← StableLab'a Dön</a>
+
+  <div class="hero">
+    <div class="eyebrow">StableLab · Lending Modülü</div>
+    <h1>Varlığını satmadan likidite al</h1>
+    <div class="lede">
+      Lending, elindeki tARC'ı satmadan teminat göstererek borç almanı sağlar. Teminatının %66'sına kadar anında borç alabilir, istediğin zaman geri ödeyip teminatını çekebilirsin.
+    </div>
+  </div>
+
+  <div class="usecase">
+    <b>Örnek senaryo:</b> Elinde tARC var ama satmak istemiyorsun (belki değer kazanmasını bekliyorsun). Onu teminat olarak yatırıp karşılığında bir miktar borç alırsın — böylece hem varlığını elinde tutar hem de ihtiyacın olan likiditeye kavuşursun. Borcunu ödediğinde teminatın geri sana döner.
+  </div>
+
+  <div class="howcard">
+    <div class="howstep"><div class="num">01</div><div class="title">Teminat yatır</div><div class="desc">tARC'ını kontrata teminat olarak kilitlersin.</div></div>
+    <div class="howstep"><div class="num">02</div><div class="title">Borç al</div><div class="desc">Teminatının %66'sına kadar anında borç alırsın.</div></div>
+    <div class="howstep"><div class="num">03</div><div class="title">Geri öde</div><div class="desc">Borcunu istediğin an kapatabilirsin.</div></div>
+    <div class="howstep"><div class="num">04</div><div class="title">Teminatı çek</div><div class="desc">Borcun yoksa teminatını geri alırsın.</div></div>
+  </div>
+
+  <div style="margin-bottom:24px;">
+    <button id="connectBtn">Cüzdanı Bağla</button>
+    <div class="acct" id="acctInfo"></div>
+  </div>
+
+  <div class="section">
+    <div class="head">Teminat Yönet</div>
+    <div class="body">
+      <div class="row">
+        <input type="number" id="collAmt" placeholder="Teminat miktarı (tARC)" />
+        <button class="act primary" id="btnDeposit">Teminat Yatır</button>
+        <button class="act" id="btnWithdraw">Teminatı Geri Çek</button>
+      </div>
+      <div class="stat-line"><span class="k">Teminat bakiyen</span><span class="v" id="lnColl">—</span></div>
+      <div class="stat-line"><span class="k">Maksimum borç alabileceğin (%66)</span><span class="v" id="lnMax">—</span></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="head">Borç Yönet</div>
+    <div class="body">
+      <div class="row">
+        <input type="number" id="borrowAmt" placeholder="Miktar (tARC)" />
+        <button class="act primary" id="btnBorrow">Borç Al</button>
+        <button class="act" id="btnRepay">Borcu Öde</button>
+      </div>
+      <div class="stat-line"><span class="k">Borcun</span><span class="v" id="lnBorrow">—</span></div>
+      <div class="hint">Teminat yatırmadan önce kontrata harcama izni (approve) otomatik istenir.</div>
+    </div>
+  </div>
+</div>
+
+<div id="log"></div>
+
+<script>
+const ADDR = {
+  tARC:    "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
+  Lending: "0xB110581094d615837b2F7ECf45ed75Bc2F083774"
+};
+const ERC20_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)"
+];
+const LENDING_ABI = [
+  "function depositCollateral(uint256 amount)",
+  "function withdrawCollateral(uint256 amount)",
+  "function borrow(uint256 amount)",
+  "function repay(uint256 amount)",
+  "function collateralBalance(address) view returns (uint256)",
+  "function borrowedBalance(address) view returns (uint256)",
+  "function COLLATERAL_FACTOR() view returns (uint256)"
+];
+
+let provider, signer, account, tARC, lending;
+
+function log(msg, type){
+  const el = document.getElementById('log');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(window.__t);
+  window.__t = setTimeout(()=>{ el.className=''; }, 6000);
+}
+function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('tr-TR', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
+function toWei(v){ return ethers.utils.parseUnits(String(v || "0"), 18); }
+
+async function connect(){
+  if(!window.ethereum){ log("Cüzdan uzantısı bulunamadı (Rabby/MetaMask).", "err"); return; }
+  try{
+    provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+    await provider.send("eth_requestAccounts", []);
+    signer = provider.getSigner();
+    account = await signer.getAddress();
+    document.getElementById('acctInfo').textContent = account.slice(0,6) + "…" + account.slice(-4);
+    tARC = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
+    lending = new ethers.Contract(ADDR.Lending, LENDING_ABI, signer);
+    document.getElementById('connectBtn').textContent = "Bağlandı";
+    document.getElementById('connectBtn').disabled = true;
+    await refreshLending();
+  }catch(e){ log("Bağlantı hatası: " + (e.message || e), "err"); }
+}
+
+async function refreshLending(){
+  if(!account) return;
+  try{
+    const coll = await lending.collateralBalance(account);
+    const borrowed = await lending.borrowedBalance(account);
+    const factor = await lending.COLLATERAL_FACTOR();
+    document.getElementById('lnColl').textContent = fmt(coll) + " tARC";
+    document.getElementById('lnBorrow').textContent = fmt(borrowed) + " tARC";
+    document.getElementById('lnMax').textContent = fmt(coll.mul(factor).div(100)) + " tARC";
+  }catch(e){ console.error(e); }
+}
+
+async function ensureApproval(amountWei){
+  const allowance = await tARC.allowance(account, ADDR.Lending);
+  if(allowance.lt(amountWei)){
+    log("İzin isteniyor…");
+    const tx = await tARC.approve(ADDR.Lending, ethers.constants.MaxUint256);
+    await tx.wait();
+  }
+}
+
+async function doDeposit(){
+  const amt = document.getElementById('collAmt').value;
+  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(wei);
+    log("Teminat yatırılıyor…");
+    const tx = await lending.depositCollateral(wei);
+    await tx.wait();
+    log("Teminat yatırıldı.", "ok");
+    await refreshLending();
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+async function doWithdraw(){
+  const amt = document.getElementById('collAmt').value;
+  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  try{
+    log("Teminat geri çekiliyor…");
+    const tx = await lending.withdrawCollateral(toWei(amt));
+    await tx.wait();
+    log("Teminat geri çekildi.", "ok");
+    await refreshLending();
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+async function doBorrow(){
+  const amt = document.getElementById('borrowAmt').value;
+  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  try{
+    log("Borç alınıyor…");
+    const tx = await lending.borrow(toWei(amt));
+    await tx.wait();
+    log("Borç alındı.", "ok");
+    await refreshLending();
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+async function doRepay(){
+  const amt = document.getElementById('borrowAmt').value;
+  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  try{
+    const wei = toWei(amt);
+    await ensureApproval(wei);
+    log("Borç ödeniyor…");
+    const tx = await lending.repay(wei);
+    await tx.wait();
+    log("Borç ödendi.", "ok");
+    await refreshLending();
+  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+}
+
+document.getElementById('connectBtn').addEventListener('click', connect);
+document.getElementById('btnDeposit').addEventListener('click', doDeposit);
+document.getElementById('btnWithdraw').addEventListener('click', doWithdraw);
+document.getElementById('btnBorrow').addEventListener('click', doBorrow);
+document.getElementById('btnRepay').addEventListener('click', doRepay);
+setInterval(() => { if(account) refreshLending(); }, 20000);
+</script>
+</body>
+</html>
