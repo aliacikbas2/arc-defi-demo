@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VeloPay — StableLab</title>
+<title>VeloPay · StableLab</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
   :root{
@@ -18,8 +18,11 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
   .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px;}
-  a.back{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none; margin-bottom:20px; }
-  a.back:hover{ color:var(--primary); }
+  .brand-back{ display:inline-flex; align-items:baseline; gap:8px; text-decoration:none; margin-bottom:24px; }
+  .brand-back .logo{ font-family:var(--sans); font-weight:800; font-size:40px; color:var(--text); letter-spacing:-0.015em; }
+  .brand-back .logo .slash{ color:var(--primary); }
+  .brand-back .hint{ font-size:11px; color:var(--text-faint); font-weight:600; transition:color .15s; }
+  .brand-back:hover .hint{ color:var(--primary); }
 
   .hero{ margin-bottom:28px; }
   .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
@@ -85,78 +88,81 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../">← StableLab'a Dön</a>
+  <a class="brand-back" href="../">
+    <span class="logo">Stable<span class="slash">Lab</span></span>
+    <span class="hint">← Click for homepage</span>
+  </a>
 
   <div class="hero">
-    <div class="eyebrow">StableLab · VeloPay Modülü</div>
-    <h1>Faturanı bekleme, bugün nakde çevir</h1>
+    <div class="eyebrow">StableLab · VeloPay Module</div>
+    <h1>Don't wait on your invoice, cash it in today</h1>
     <div class="lede">
-      Invoice Factoring (fatura faktoringi), dünya çapında milyarlarca dolarlık bir finans sektörü — serbest çalışanların ve işletmelerin vadeli faturalarını anında nakde çevirmesini sağlar. Bu iş için <b>VeloPay'i sizin için tasarladık.</b>
+      Invoice factoring is a multi-billion-dollar global finance industry; it lets freelancers and businesses turn their term invoices into cash instantly. <b>We built VeloPay for exactly this.</b>
     </div>
   </div>
 
   <div class="flow-demo">
-    <div class="flow-step">Fatura kesildi<span class="big">100 tARC</span></div>
+    <div class="flow-step">Invoice issued<span class="big">100 tARC</span></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step">Anında ödenen<span class="big">90 tARC</span></div>
+    <div class="flow-step">Paid instantly<span class="big">90 tARC</span></div>
     <div class="flow-arrow">→</div>
-    <div class="flow-step">Vadede tahsil<span class="big">100 tARC (+gecikme varsa)</span></div>
+    <div class="flow-step">Collected at due date<span class="big">100 tARC (+ late fee if any)</span></div>
   </div>
 
   <div class="usecase">
-    <b>Örnek senaryo:</b> Bir freelancer, küresel bir şirkete iş yapıyor ve faturasını 30 gün vadeyle kesiyor. Bu süre boyunca nakit akışı sıkıntısı yaşamak yerine, faturasını VeloPay'e yükler ve saniyeler içinde tutarın %90'ını cüzdanına alır. Vade günü geldiğinde şirket ödemeyi doğrudan havuza yapar; geç kalırsa günlük %0.1 gecikme bedeli işler. Likidite sağlayan yatırımcılar, bu farktan kazanç elde eder.
+    <b>Example scenario:</b> A freelancer does work for a global company and issues an invoice with 30-day terms. Instead of dealing with a cash flow crunch during that time, they upload their invoice to VeloPay and receive 90% of the amount in their wallet within seconds. When the due date arrives, the company pays directly into the pool; if late, a 0.1% daily late fee applies. Investors providing liquidity earn from this spread.
   </div>
 
   <div class="howcard">
-    <div class="howstep"><div class="num">01</div><div class="title">Havuza likidite</div><div class="desc">Yatırımcılar faturaları fonlayacak likiditeyi sağlar.</div></div>
-    <div class="howstep"><div class="num">02</div><div class="title">Fatura oluştur</div><div class="desc">Borçlu, tutar ve vade ile fatura kaydı açılır.</div></div>
-    <div class="howstep"><div class="num">03</div><div class="title">%90 anında öde</div><div class="desc">Tutarın büyük kısmı saniyeler içinde hesaba geçer.</div></div>
-    <div class="howstep"><div class="num">04</div><div class="title">Vadede tahsilat</div><div class="desc">Borçlu öder; geç kalırsa gecikme bedeli işler.</div></div>
+    <div class="howstep"><div class="num">01</div><div class="title">Liquidity to the pool</div><div class="desc">Investors supply the liquidity that funds invoices.</div></div>
+    <div class="howstep"><div class="num">02</div><div class="title">Create invoice</div><div class="desc">A record is opened with the debtor, amount, and due date.</div></div>
+    <div class="howstep"><div class="num">03</div><div class="title">Pay 90% instantly</div><div class="desc">Most of the amount lands in the account within seconds.</div></div>
+    <div class="howstep"><div class="num">04</div><div class="title">Collection at due date</div><div class="desc">Debtor pays; if late, a late fee applies.</div></div>
   </div>
 
   <div style="margin-bottom:24px;">
-    <button id="connectBtn">Cüzdanı Bağla</button>
+    <button id="connectBtn">Connect Wallet</button>
     <div class="acct" id="acctInfo"></div>
   </div>
 
   <div class="section">
-    <div class="head">Havuza Likidite Ekle</div>
+    <div class="head">Add Liquidity to Pool</div>
     <div class="body">
       <div class="row">
-        <input type="number" id="veloLiqAmt" placeholder="Miktar (tARC)" />
-        <button class="act primary" id="btnVeloAddLiq">Likidite Ekle</button>
+        <input type="number" id="veloLiqAmt" placeholder="Amount (tARC)" />
+        <button class="act primary" id="btnVeloAddLiq">Add Liquidity</button>
       </div>
-      <div class="hint">Havuza eklediğin tARC, faturaları fonlamak için kullanılır.</div>
+      <div class="hint">The tARC you add to the pool is used to fund invoices.</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="head">Fatura Oluştur</div>
+    <div class="head">Create Invoice</div>
     <div class="body">
       <div class="row">
-        <input type="text" id="veloDebtor" placeholder="Borçlu adresi — 0x..." />
+        <input type="text" id="veloDebtor" placeholder="Debtor address (0x...)" />
       </div>
       <div class="row">
-        <input type="number" id="veloFaceValue" placeholder="Fatura tutarı (tARC)" />
-        <input type="number" id="veloDueDate" placeholder="Vade (Unix zaman damgası)" />
-        <button class="act primary" id="btnCreateInvoice">Fatura Oluştur</button>
+        <input type="number" id="veloFaceValue" placeholder="Invoice amount (tARC)" />
+        <input type="number" id="veloDueDate" placeholder="Due date (Unix timestamp)" />
+        <button class="act primary" id="btnCreateInvoice">Create Invoice</button>
       </div>
-      <div class="hint">Oluşturduğun anda tutarın %90'ı cüzdanına gönderilir.</div>
+      <div class="hint">The moment you create it, 90% of the amount is sent to your wallet.</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="head">Fatura Yönet</div>
+    <div class="head">Manage Invoice</div>
     <div class="body">
       <div class="row">
-        <input type="number" id="veloInvoiceId" placeholder="Fatura ID" />
-        <button class="act" id="btnVeloCheck">Sorgula</button>
-        <button class="act primary" id="btnVeloRepay">Ödemeyi Yap</button>
-        <button class="act" id="btnVeloDefault">Temerrüt İşaretle</button>
+        <input type="number" id="veloInvoiceId" placeholder="Invoice ID" />
+        <button class="act" id="btnVeloCheck">Check</button>
+        <button class="act primary" id="btnVeloRepay">Make Payment</button>
+        <button class="act" id="btnVeloDefault">Mark Defaulted</button>
       </div>
-      <div class="stat-line"><span class="k">Şu an ödenmesi gereken tutar</span><span class="v" id="veloAmountDue">—</span></div>
-      <div class="stat-line"><span class="k">Fatura durumu</span><span class="v" id="veloStatus">—</span></div>
-      <div class="hint">Vade geçmişse günlük %0.1 gecikme bedeli otomatik hesaplanır. Vade + 7 gün geçip hâlâ ödenmemişse temerrüt işaretlenebilir.</div>
+      <div class="stat-line"><span class="k">Currently amount due</span><span class="v" id="veloAmountDue">—</span></div>
+      <div class="stat-line"><span class="k">Invoice status</span><span class="v" id="veloStatus">—</span></div>
+      <div class="hint">If overdue, a 0.1% daily late fee is calculated automatically. If unpaid 7 days past due, it can be marked defaulted.</div>
     </div>
   </div>
 </div>
@@ -166,7 +172,7 @@
 <script>
 const ADDR = {
   tARC:    "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
-  VeloPay: "0x417387F0FB246E3Afd2a25c3560FEC6Ce1f75729"
+  VeloPay: "0x6345E4eb720D6fa8DC525A3dA5B3CEF60c13658D"
 };
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -181,7 +187,7 @@ const VELOPAY_ABI = [
   "function getAmountDue(uint256 id) view returns (uint256)",
   "function getInvoice(uint256 id) view returns (address,address,uint256,uint256,uint256,bool,bool)"
 ];
-const STATUS_LABELS = { repaid: "Ödendi", defaulted: "Temerrüt", open: "Açık" };
+const STATUS_LABELS = { repaid: "Repaid", defaulted: "Defaulted", open: "Open" };
 
 let provider, signer, account, tARC, velopay;
 
@@ -192,11 +198,11 @@ function log(msg, type){
   clearTimeout(window.__t);
   window.__t = setTimeout(()=>{ el.className=''; }, 6000);
 }
-function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('tr-TR', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
+function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('en-US', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
 function toWei(v){ return ethers.utils.parseUnits(String(v || "0"), 18); }
 
 async function connect(){
-  if(!window.ethereum){ log("Cüzdan uzantısı bulunamadı (Rabby/MetaMask).", "err"); return; }
+  if(!window.ethereum){ log("No wallet extension found (Rabby/MetaMask).", "err"); return; }
   try{
     provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     await provider.send("eth_requestAccounts", []);
@@ -205,15 +211,15 @@ async function connect(){
     document.getElementById('acctInfo').textContent = account.slice(0,6) + "…" + account.slice(-4);
     tARC = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
     velopay = new ethers.Contract(ADDR.VeloPay, VELOPAY_ABI, signer);
-    document.getElementById('connectBtn').textContent = "Bağlandı";
+    document.getElementById('connectBtn').textContent = "Connected";
     document.getElementById('connectBtn').disabled = true;
-  }catch(e){ log("Bağlantı hatası: " + (e.message || e), "err"); }
+  }catch(e){ log("Connection error: " + (e.message || e), "err"); }
 }
 
 async function ensureApproval(amountWei){
   const allowance = await tARC.allowance(account, ADDR.VeloPay);
   if(allowance.lt(amountWei)){
-    log("İzin isteniyor…");
+    log("Requesting approval…");
     const tx = await tARC.approve(ADDR.VeloPay, ethers.constants.MaxUint256);
     await tx.wait();
   }
@@ -221,69 +227,69 @@ async function ensureApproval(amountWei){
 
 async function doVeloAddLiq(){
   const amt = document.getElementById('veloLiqAmt').value;
-  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
-  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  if(!account){ log("Connect your wallet first.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Enter a valid amount.", "err"); return; }
   try{
     const wei = toWei(amt);
     await ensureApproval(wei);
-    log("Likidite ekleniyor…");
+    log("Adding liquidity…");
     const tx = await velopay.addLiquidity(wei);
     await tx.wait();
-    log("Likidite eklendi.", "ok");
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+    log("Liquidity added.", "ok");
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 async function doCreateInvoice(){
   const debtor = document.getElementById('veloDebtor').value.trim();
   const faceValue = document.getElementById('veloFaceValue').value;
   const dueDate = document.getElementById('veloDueDate').value;
-  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
-  if(!ethers.utils.isAddress(debtor)){ log("Geçerli bir borçlu adresi gir.", "err"); return; }
-  if(!faceValue || Number(faceValue) <= 0 || !dueDate){ log("Geçerli tutar ve vade gir.", "err"); return; }
+  if(!account){ log("Connect your wallet first.", "err"); return; }
+  if(!ethers.utils.isAddress(debtor)){ log("Enter a valid debtor address.", "err"); return; }
+  if(!faceValue || Number(faceValue) <= 0 || !dueDate){ log("Enter a valid amount and due date.", "err"); return; }
   try{
-    log("Fatura oluşturuluyor…");
+    log("Creating invoice…");
     const tx = await velopay.createInvoice(debtor, toWei(faceValue), Math.floor(Number(dueDate)));
     await tx.wait();
-    log("Fatura oluşturuldu, %90 hesabına gönderildi.", "ok");
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+    log("Invoice created, 90% sent to your wallet.", "ok");
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 async function doVeloCheck(){
   const id = document.getElementById('veloInvoiceId').value;
-  if(id === "" || id === null){ log("Fatura ID gir.", "err"); return; }
+  if(id === "" || id === null){ log("Enter an Invoice ID.", "err"); return; }
   try{
     const due = await velopay.getAmountDue(id);
     document.getElementById('veloAmountDue').textContent = fmt(due) + " tARC";
     const inv = await velopay.getInvoice(id);
     const repaid = inv[5], defaulted = inv[6];
     document.getElementById('veloStatus').textContent = defaulted ? STATUS_LABELS.defaulted : (repaid ? STATUS_LABELS.repaid : STATUS_LABELS.open);
-  }catch(e){ log("Sorgu başarısız: " + (e.reason || e.message || e), "err"); }
+  }catch(e){ log("Query failed: " + (e.reason || e.message || e), "err"); }
 }
 
 async function doVeloRepay(){
   const id = document.getElementById('veloInvoiceId').value;
-  if(id === "" || id === null){ log("Fatura ID gir.", "err"); return; }
+  if(id === "" || id === null){ log("Enter an Invoice ID.", "err"); return; }
   try{
     const due = await velopay.getAmountDue(id);
     await ensureApproval(due);
-    log("Ödeme yapılıyor…");
+    log("Making payment…");
     const tx = await velopay.repayInvoice(id);
     await tx.wait();
-    log("Ödeme başarılı.", "ok");
+    log("Payment successful.", "ok");
     await doVeloCheck();
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 async function doVeloDefault(){
   const id = document.getElementById('veloInvoiceId').value;
-  if(id === "" || id === null){ log("Fatura ID gir.", "err"); return; }
+  if(id === "" || id === null){ log("Enter an Invoice ID.", "err"); return; }
   try{
-    log("Temerrüt işaretleniyor…");
+    log("Marking defaulted…");
     const tx = await velopay.markDefaulted(id);
     await tx.wait();
-    log("Temerrüt olarak işaretlendi.", "ok");
+    log("Marked as defaulted.", "ok");
     await doVeloCheck();
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 document.getElementById('connectBtn').addEventListener('click', connect);
@@ -292,6 +298,15 @@ document.getElementById('btnCreateInvoice').addEventListener('click', doCreateIn
 document.getElementById('btnVeloCheck').addEventListener('click', doVeloCheck);
 document.getElementById('btnVeloRepay').addEventListener('click', doVeloRepay);
 document.getElementById('btnVeloDefault').addEventListener('click', doVeloDefault);
+
+/* ---------- Auto-reconnect ---------- */
+(async function(){
+  if(!window.ethereum) return;
+  try{
+    const accs = await window.ethereum.request({ method: 'eth_accounts' });
+    if(accs && accs.length){ await connect(); }
+  }catch(e){ console.error(e); }
+})();
 </script>
 </body>
 </html>
