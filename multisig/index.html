@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>VeloPay · StableLab</title>
+<title>VaultGuard · StableLab</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
   :root{
@@ -29,16 +29,17 @@
   h1{ font-size:32px; font-weight:800; margin:0 0 10px; letter-spacing:-0.02em; }
   .lede{ font-size:14.5px; color:var(--text-mute); max-width:60ch; line-height:1.65; }
 
-  .flow-demo{
+  .signers-demo{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:20px; margin:24px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:20px; margin:24px 0; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
   }
-  .flow-step{
-    background:var(--surface-alt); border-radius:8px; padding:10px 14px; font-size:12px; font-weight:600; color:var(--text);
-    text-align:center; flex:1; min-width:110px;
+  .signer-dot{
+    width:38px; height:38px; border-radius:50%; background:var(--primary-soft); color:var(--primary-dark);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; border:2px solid var(--primary);
   }
-  .flow-step .big{ font-family:var(--mono); font-size:15px; font-weight:700; color:var(--primary-dark); display:block; margin-top:2px; }
-  .flow-arrow{ color:var(--text-faint); font-size:16px; }
+  .signer-dot.pending{ background:var(--surface-alt); color:var(--text-faint); border-color:var(--border); border-style:dashed; }
+  .signers-arrow{ color:var(--text-faint); font-size:18px; }
+  .signers-label{ font-size:11.5px; color:var(--text-mute); width:100%; margin-top:6px; }
 
   .howcard{
     display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:1px;
@@ -94,30 +95,31 @@
   </a>
 
   <div class="hero">
-    <div class="eyebrow">StableLab · VeloPay Module</div>
-    <h1>Don't wait on your invoice, cash it in today</h1>
+    <div class="eyebrow">StableLab · VaultGuard Module</div>
+    <h1>One signature is never enough</h1>
     <div class="lede">
-      Invoice factoring is a multi-billion-dollar global finance industry; it lets freelancers and businesses turn their term invoices into cash instantly. <b>We built VeloPay for exactly this.</b>
+      VaultGuard creates a shared vault; moving money out requires approval from a predetermined number of signers, not just one person. Even if a single wallet is compromised, money can't be withdrawn alone.
     </div>
   </div>
 
-  <div class="flow-demo">
-    <div class="flow-step">Invoice issued<span class="big">100 tARC</span></div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">Paid instantly<span class="big">90 tARC</span></div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-step">Collected at due date<span class="big">100 tARC (+ late fee if any)</span></div>
+  <div class="signers-demo">
+    <div class="signer-dot">✓</div>
+    <div class="signer-dot">✓</div>
+    <div class="signer-dot pending">?</div>
+    <div class="signers-arrow">→</div>
+    <div class="signer-dot" style="background:var(--ok); border-color:var(--ok); color:#fff;">$</div>
+    <div class="signers-label">Example: once 2 of 3 signers approve, the transaction executes automatically</div>
   </div>
 
   <div class="usecase">
-    <b>Example scenario:</b> A freelancer does work for a global company and issues an invoice with 30-day terms. Instead of dealing with a cash flow crunch during that time, they upload their invoice to VeloPay and receive 90% of the amount in their wallet within seconds. When the due date arrives, the company pays directly into the pool; if late, a 0.1% daily late fee applies. Investors providing liquidity earn from this spread.
+    <b>Example scenario:</b> You and two business partners set up a shared company vault (3 people, 2 approvals needed). No one can withdraw alone; someone proposes "send 500 tARC to this address", and once at least 2 people approve, the transaction executes automatically. Even if one person's wallet gets stolen, the money stays safe.
   </div>
 
   <div class="howcard">
-    <div class="howstep"><div class="num">01</div><div class="title">Liquidity to the pool</div><div class="desc">Investors supply the liquidity that funds invoices.</div></div>
-    <div class="howstep"><div class="num">02</div><div class="title">Create invoice</div><div class="desc">A record is opened with the debtor, amount, and due date.</div></div>
-    <div class="howstep"><div class="num">03</div><div class="title">Pay 90% instantly</div><div class="desc">Most of the amount lands in the account within seconds.</div></div>
-    <div class="howstep"><div class="num">04</div><div class="title">Collection at due date</div><div class="desc">Debtor pays; if late, a late fee applies.</div></div>
+    <div class="howstep"><div class="num">01</div><div class="title">Deposit to vault</div><div class="desc">You build the shared fund by depositing tokens into the vault.</div></div>
+    <div class="howstep"><div class="num">02</div><div class="title">Propose</div><div class="desc">Any signer proposes a transfer.</div></div>
+    <div class="howstep"><div class="num">03</div><div class="title">Confirmations gather</div><div class="desc">Other signers confirm the proposal one by one.</div></div>
+    <div class="howstep"><div class="num">04</div><div class="title">Executes automatically</div><div class="desc">Once the threshold is reached, the transfer happens on its own.</div></div>
   </div>
 
   <div style="margin-bottom:24px;">
@@ -126,43 +128,39 @@
   </div>
 
   <div class="section">
-    <div class="head">Add Liquidity to Pool</div>
+    <div class="head">Deposit to Vault</div>
     <div class="body">
       <div class="row">
-        <input type="number" id="veloLiqAmt" placeholder="Amount (tARC)" />
-        <button class="act primary" id="btnVeloAddLiq">Add Liquidity</button>
+        <input type="number" id="msigDepositAmt" placeholder="Amount (tARC)" />
+        <button class="act primary" id="btnMsigDeposit">Deposit to Vault</button>
       </div>
-      <div class="hint">The tARC you add to the pool is used to fund invoices.</div>
+      <div class="hint">The tARC you deposit stays in the vault until a proposal is approved.</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="head">Create Invoice</div>
+    <div class="head">Propose Transfer</div>
     <div class="body">
       <div class="row">
-        <input type="text" id="veloDebtor" placeholder="Debtor address (0x...)" />
+        <input type="text" id="msigTo" placeholder="Recipient address (0x...)" />
+        <input type="number" id="msigAmount" placeholder="Amount (tARC)" />
+        <button class="act primary" id="btnMsigPropose">Create Proposal</button>
       </div>
-      <div class="row">
-        <input type="number" id="veloFaceValue" placeholder="Invoice amount (tARC)" />
-        <input type="number" id="veloDueDate" placeholder="Due date (Unix timestamp)" />
-        <button class="act primary" id="btnCreateInvoice">Create Invoice</button>
-      </div>
-      <div class="hint">The moment you create it, 90% of the amount is sent to your wallet.</div>
+      <div class="hint">After creating a proposal, the required number of signers must confirm it.</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="head">Manage Invoice</div>
+    <div class="head">Manage Proposal</div>
     <div class="body">
       <div class="row">
-        <input type="number" id="veloInvoiceId" placeholder="Invoice ID" />
-        <button class="act" id="btnVeloCheck">Check</button>
-        <button class="act primary" id="btnVeloRepay">Make Payment</button>
-        <button class="act" id="btnVeloDefault">Mark Defaulted</button>
+        <input type="number" id="msigProposalId" placeholder="Proposal ID" />
+        <button class="act" id="btnMsigCheck">Check</button>
+        <button class="act primary" id="btnMsigConfirm">Confirm</button>
       </div>
-      <div class="stat-line"><span class="k">Currently amount due</span><span class="v" id="veloAmountDue">—</span></div>
-      <div class="stat-line"><span class="k">Invoice status</span><span class="v" id="veloStatus">—</span></div>
-      <div class="hint">If overdue, a 0.1% daily late fee is calculated automatically. If unpaid 7 days past due, it can be marked defaulted.</div>
+      <div class="stat-line"><span class="k">Required confirmations</span><span class="v" id="msigRequiredVal">—</span></div>
+      <div class="stat-line"><span class="k">Proposal info</span><span class="v" id="msigProposalVal">—</span></div>
+      <div class="hint">First deposit into the vault, then propose a transfer; once enough confirmations are collected, it executes automatically.</div>
     </div>
   </div>
 </div>
@@ -171,25 +169,23 @@
 
 <script>
 const ADDR = {
-  tARC:    "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
-  VeloPay: "0x6345E4eb720D6fa8DC525A3dA5B3CEF60c13658D"
+  tARC:     "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
+  MultiSig: "0x99F144C52dF54345775D98d487549FA2d88aBBa5"
 };
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)"
 ];
-const VELOPAY_ABI = [
-  "function addLiquidity(uint256 amount)",
-  "function createInvoice(address debtor, uint256 faceValue, uint256 dueDate) returns (uint256)",
-  "function repayInvoice(uint256 id)",
-  "function markDefaulted(uint256 id)",
-  "function getAmountDue(uint256 id) view returns (uint256)",
-  "function getInvoice(uint256 id) view returns (address,address,uint256,uint256,uint256,bool,bool)"
+const MULTISIG_ABI = [
+  "function deposit(uint256 amount)",
+  "function proposeTransfer(address to, uint256 amount) returns (uint256)",
+  "function confirm(uint256 proposalId)",
+  "function proposals(uint256) view returns (address to, uint256 amount, uint256 confirmations, bool executed)",
+  "function required() view returns (uint256)"
 ];
-const STATUS_LABELS = { repaid: "Repaid", defaulted: "Defaulted", open: "Open" };
 
-let provider, signer, account, tARC, velopay;
+let provider, signer, account, tARC, multisig;
 
 function log(msg, type){
   const el = document.getElementById('log');
@@ -210,94 +206,77 @@ async function connect(){
     account = await signer.getAddress();
     document.getElementById('acctInfo').textContent = account.slice(0,6) + "…" + account.slice(-4);
     tARC = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
-    velopay = new ethers.Contract(ADDR.VeloPay, VELOPAY_ABI, signer);
+    multisig = new ethers.Contract(ADDR.MultiSig, MULTISIG_ABI, signer);
     document.getElementById('connectBtn').textContent = "Connected";
     document.getElementById('connectBtn').disabled = true;
   }catch(e){ log("Connection error: " + (e.message || e), "err"); }
 }
 
 async function ensureApproval(amountWei){
-  const allowance = await tARC.allowance(account, ADDR.VeloPay);
+  const allowance = await tARC.allowance(account, ADDR.MultiSig);
   if(allowance.lt(amountWei)){
     log("Requesting approval…");
-    const tx = await tARC.approve(ADDR.VeloPay, ethers.constants.MaxUint256);
+    const tx = await tARC.approve(ADDR.MultiSig, ethers.constants.MaxUint256);
     await tx.wait();
   }
 }
 
-async function doVeloAddLiq(){
-  const amt = document.getElementById('veloLiqAmt').value;
+async function doMsigDeposit(){
+  const amt = document.getElementById('msigDepositAmt').value;
   if(!account){ log("Connect your wallet first.", "err"); return; }
   if(!amt || Number(amt) <= 0){ log("Enter a valid amount.", "err"); return; }
   try{
     const wei = toWei(amt);
     await ensureApproval(wei);
-    log("Adding liquidity…");
-    const tx = await velopay.addLiquidity(wei);
+    log("Depositing to vault…");
+    const tx = await multisig.deposit(wei);
     await tx.wait();
-    log("Liquidity added.", "ok");
+    log("Deposit successful.", "ok");
   }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
-
-async function doCreateInvoice(){
-  const debtor = document.getElementById('veloDebtor').value.trim();
-  const faceValue = document.getElementById('veloFaceValue').value;
-  const dueDate = document.getElementById('veloDueDate').value;
+async function doMsigPropose(){
+  const to = document.getElementById('msigTo').value.trim();
+  const amt = document.getElementById('msigAmount').value;
   if(!account){ log("Connect your wallet first.", "err"); return; }
-  if(!ethers.utils.isAddress(debtor)){ log("Enter a valid debtor address.", "err"); return; }
-  if(!faceValue || Number(faceValue) <= 0 || !dueDate){ log("Enter a valid amount and due date.", "err"); return; }
+  if(!ethers.utils.isAddress(to)){ log("Enter a valid recipient address.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Enter a valid amount.", "err"); return; }
   try{
-    log("Creating invoice…");
-    const tx = await velopay.createInvoice(debtor, toWei(faceValue), Math.floor(Number(dueDate)));
+    log("Sending proposal…");
+    const tx = await multisig.proposeTransfer(to, toWei(amt));
     await tx.wait();
-    log("Invoice created, 90% sent to your wallet.", "ok");
+    log("Proposal created.", "ok");
   }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
-
-async function doVeloCheck(){
-  const id = document.getElementById('veloInvoiceId').value;
-  if(id === "" || id === null){ log("Enter an Invoice ID.", "err"); return; }
+async function doMsigCheck(){
   try{
-    const due = await velopay.getAmountDue(id);
-    document.getElementById('veloAmountDue').textContent = fmt(due) + " tARC";
-    const inv = await velopay.getInvoice(id);
-    const repaid = inv[5], defaulted = inv[6];
-    document.getElementById('veloStatus').textContent = defaulted ? STATUS_LABELS.defaulted : (repaid ? STATUS_LABELS.repaid : STATUS_LABELS.open);
+    const req = await multisig.required();
+    document.getElementById('msigRequiredVal').textContent = req.toString();
+    const id = document.getElementById('msigProposalId').value;
+    if(id !== "" && id !== null){
+      const p = await multisig.proposals(id);
+      document.getElementById('msigProposalVal').textContent =
+        p.to.slice(0,6) + "…" + p.to.slice(-4) + " · " + fmt(p.amount) + " tARC · " +
+        p.confirmations.toString() + "/" + req.toString() + (p.executed ? " ✓" : "");
+    }
   }catch(e){ log("Query failed: " + (e.reason || e.message || e), "err"); }
 }
-
-async function doVeloRepay(){
-  const id = document.getElementById('veloInvoiceId').value;
-  if(id === "" || id === null){ log("Enter an Invoice ID.", "err"); return; }
+async function doMsigConfirm(){
+  const id = document.getElementById('msigProposalId').value;
+  if(id === "" || id === null){ log("Enter a Proposal ID.", "err"); return; }
   try{
-    const due = await velopay.getAmountDue(id);
-    await ensureApproval(due);
-    log("Making payment…");
-    const tx = await velopay.repayInvoice(id);
+    log("Confirming…");
+    const tx = await multisig.confirm(id);
     await tx.wait();
-    log("Payment successful.", "ok");
-    await doVeloCheck();
-  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
-}
-
-async function doVeloDefault(){
-  const id = document.getElementById('veloInvoiceId').value;
-  if(id === "" || id === null){ log("Enter an Invoice ID.", "err"); return; }
-  try{
-    log("Marking defaulted…");
-    const tx = await velopay.markDefaulted(id);
-    await tx.wait();
-    log("Marked as defaulted.", "ok");
-    await doVeloCheck();
+    log("Confirmed.", "ok");
+    await doMsigCheck();
   }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 document.getElementById('connectBtn').addEventListener('click', connect);
-document.getElementById('btnVeloAddLiq').addEventListener('click', doVeloAddLiq);
-document.getElementById('btnCreateInvoice').addEventListener('click', doCreateInvoice);
-document.getElementById('btnVeloCheck').addEventListener('click', doVeloCheck);
-document.getElementById('btnVeloRepay').addEventListener('click', doVeloRepay);
-document.getElementById('btnVeloDefault').addEventListener('click', doVeloDefault);
+document.getElementById('btnMsigDeposit').addEventListener('click', doMsigDeposit);
+document.getElementById('btnMsigPropose').addEventListener('click', doMsigPropose);
+document.getElementById('btnMsigCheck').addEventListener('click', doMsigCheck);
+document.getElementById('btnMsigConfirm').addEventListener('click', doMsigConfirm);
 
 /* ---------- Auto-reconnect ---------- */
 (async function(){
