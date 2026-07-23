@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Escrow — StableLab</title>
+<title>TrustLock · StableLab</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
   :root{
@@ -18,8 +18,11 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
   .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px;}
-  a.back{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none; margin-bottom:20px; }
-  a.back:hover{ color:var(--primary); }
+  .brand-back{ display:inline-flex; align-items:baseline; gap:8px; text-decoration:none; margin-bottom:24px; }
+  .brand-back .logo{ font-family:var(--sans); font-weight:800; font-size:40px; color:var(--text); letter-spacing:-0.015em; }
+  .brand-back .logo .slash{ color:var(--primary); }
+  .brand-back .hint{ font-size:11px; color:var(--text-faint); font-weight:600; transition:color .15s; }
+  .brand-back:hover .hint{ color:var(--primary); }
 
   .hero{ margin-bottom:28px; }
   .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
@@ -74,56 +77,59 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../">← StableLab'a Dön</a>
+  <a class="brand-back" href="../">
+    <span class="logo">Stable<span class="slash">Lab</span></span>
+    <span class="hint">← Click for homepage</span>
+  </a>
 
   <div class="hero">
-    <div class="eyebrow">StableLab · Escrow Modülü</div>
-    <h1>Güvenle emanet edilen ödemeler</h1>
+    <div class="eyebrow">StableLab · TrustLock Module</div>
+    <h1>Payments held safely in trust</h1>
     <div class="lede">
-      İki taraf birbirine tam güvenmiyor mu? Escrow, parayı doğrudan karşı tarafa göndermek yerine zincir üzerinde kilitler ve yalnızca üzerinde anlaşılan koşul gerçekleştiğinde serbest bırakır — bir hakem (arbiter) devrede olduğu sürece anlaşmazlıklarda bile adil bir çözüm yolu sunar.
+      When two parties don't fully trust each other, TrustLock locks the money onchain instead of sending it directly to the other side, releasing it only when the agreed condition is met; with an arbiter in the loop, it offers a fair resolution path even in disputes.
     </div>
   </div>
 
   <div class="usecase">
-    <b>Örnek senaryo:</b> Bir freelancer'a proje karşılığı ödeme yapacaksınız. Parayı doğrudan gönderirseniz iş bitmeden kaybolma riski var; freelancer önce iş yapıp sonra ödeme bekleseniz güven sorunu onun tarafında oluşur. Escrow ile parayı kilitlersiniz, güvenilir bir üçüncü kişiyi (ya da kendinizi) hakem atarsınız — iş tamamlanınca ödeme serbest bırakılır, anlaşmazlık çıkarsa hakem karar verir.
+    <b>Example scenario:</b> You're about to pay a freelancer for a project. If you send the money directly, there's a risk they disappear before finishing; if they do the work first and wait for payment, the trust problem shifts to their side. With TrustLock, you lock the money and appoint a trusted third party (or yourself) as arbiter; once the work is done, payment is released, and if a dispute arises, the arbiter decides.
   </div>
 
   <div class="howcard">
-    <div class="howstep"><div class="num">01</div><div class="title">Anlaşma oluştur</div><div class="desc">Alıcı ve hakem adresini belirleyip tutarı kilitlersin.</div></div>
-    <div class="howstep"><div class="num">02</div><div class="title">İş tamamlanır</div><div class="desc">Taraflar üzerinde anlaştığı iş/teslimat gerçekleşir.</div></div>
-    <div class="howstep"><div class="num">03</div><div class="title">Serbest bırak</div><div class="desc">Sen ya da hakem onaylar, ödeme alıcıya gider.</div></div>
-    <div class="howstep"><div class="num">04</div><div class="title">Anlaşmazlık</div><div class="desc">Sorun varsa hakem, ya alıcıya ya da sana iade karar verir.</div></div>
+    <div class="howstep"><div class="num">01</div><div class="title">Create a deal</div><div class="desc">You set the beneficiary and arbiter addresses, and lock the amount.</div></div>
+    <div class="howstep"><div class="num">02</div><div class="title">Work is completed</div><div class="desc">The parties' agreed-upon work/delivery happens.</div></div>
+    <div class="howstep"><div class="num">03</div><div class="title">Release</div><div class="desc">You or the arbiter approves, payment goes to the beneficiary.</div></div>
+    <div class="howstep"><div class="num">04</div><div class="title">Dispute</div><div class="desc">If there's an issue, the arbiter decides whether it goes to the beneficiary or is refunded to you.</div></div>
   </div>
 
   <div style="margin-bottom:24px;">
-    <button id="connectBtn">Cüzdanı Bağla</button>
+    <button id="connectBtn">Connect Wallet</button>
     <div class="acct" id="acctInfo"></div>
   </div>
 
   <div class="section">
-    <div class="head">Yeni Anlaşma Oluştur</div>
+    <div class="head">Create a New Deal</div>
     <div class="body">
-      <div class="row"><input type="text" id="escrowBeneficiary" placeholder="Alıcı (beneficiary) adresi — 0x..." /></div>
+      <div class="row"><input type="text" id="escrowBeneficiary" placeholder="Beneficiary address (0x...)" /></div>
       <div class="row">
-        <input type="text" id="escrowArbiter" placeholder="Hakem (arbiter) adresi — 0x..." />
-        <input type="number" id="escrowAmount" placeholder="Miktar (tARC)" />
-        <button class="act primary" id="btnCreateDeal">Anlaşma Oluştur</button>
+        <input type="text" id="escrowArbiter" placeholder="Arbiter address (0x...)" />
+        <input type="number" id="escrowAmount" placeholder="Amount (tARC)" />
+        <button class="act primary" id="btnCreateDeal">Create Deal</button>
       </div>
-      <div class="hint">Miktar kilitlenir; hakem ya da sen serbest bırakana/iade edene kadar bekler.</div>
+      <div class="hint">The amount gets locked; it waits until you or the arbiter releases or refunds it.</div>
     </div>
   </div>
 
   <div class="section">
-    <div class="head">Anlaşma Yönet</div>
+    <div class="head">Manage Deal</div>
     <div class="body">
       <div class="row">
-        <input type="number" id="dealIdInput" placeholder="Anlaşma ID" />
-        <button class="act" id="btnDealCheck">Sorgula</button>
-        <button class="act primary" id="btnDealRelease">Serbest Bırak</button>
-        <button class="act" id="btnDealRefund">İade Et</button>
+        <input type="number" id="dealIdInput" placeholder="Deal ID" />
+        <button class="act" id="btnDealCheck">Check</button>
+        <button class="act primary" id="btnDealRelease">Release</button>
+        <button class="act" id="btnDealRefund">Refund</button>
       </div>
-      <div class="stat-line"><span class="k">Anlaşma durumu</span><span class="v" id="dealStatusVal">—</span></div>
-      <div class="hint">Serbest bırakma: gönderen ya da hakem yapabilir. İade: alıcı ya da hakem yapabilir.</div>
+      <div class="stat-line"><span class="k">Deal status</span><span class="v" id="dealStatusVal">—</span></div>
+      <div class="hint">Release: depositor or arbiter can do it. Refund: beneficiary or arbiter can do it.</div>
     </div>
   </div>
 </div>
@@ -133,7 +139,7 @@
 <script>
 const ADDR = {
   tARC:   "0xc59bD7aA02688Db21EaD5926998aE9B691E6811E",
-  Escrow: "0xaD9115aA0d4BEbA4EBa3660623E2790122d12833"
+  Escrow: "0xAbe6B2B6515e270776d8e19FeBb8286058959249"
 };
 const ERC20_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -146,7 +152,7 @@ const ESCROW_ABI = [
   "function refund(uint256 dealId)",
   "function getDeal(uint256 dealId) view returns (address,address,address,uint256,uint8)"
 ];
-const STATUS = ["Aktif", "Serbest Bırakıldı", "İade Edildi"];
+const STATUS = ["Active", "Released", "Refunded"];
 
 let provider, signer, account, tARC, escrow;
 
@@ -157,11 +163,11 @@ function log(msg, type){
   clearTimeout(window.__t);
   window.__t = setTimeout(()=>{ el.className=''; }, 6000);
 }
-function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('tr-TR', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
+function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('en-US', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
 function toWei(v){ return ethers.utils.parseUnits(String(v || "0"), 18); }
 
 async function connect(){
-  if(!window.ethereum){ log("Cüzdan uzantısı bulunamadı (Rabby/MetaMask).", "err"); return; }
+  if(!window.ethereum){ log("No wallet extension found (Rabby/MetaMask).", "err"); return; }
   try{
     provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     await provider.send("eth_requestAccounts", []);
@@ -170,15 +176,15 @@ async function connect(){
     document.getElementById('acctInfo').textContent = account.slice(0,6) + "…" + account.slice(-4);
     tARC = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
     escrow = new ethers.Contract(ADDR.Escrow, ESCROW_ABI, signer);
-    document.getElementById('connectBtn').textContent = "Bağlandı";
+    document.getElementById('connectBtn').textContent = "Connected";
     document.getElementById('connectBtn').disabled = true;
-  }catch(e){ log("Bağlantı hatası: " + (e.message || e), "err"); }
+  }catch(e){ log("Connection error: " + (e.message || e), "err"); }
 }
 
 async function ensureApproval(amountWei){
   const allowance = await tARC.allowance(account, ADDR.Escrow);
   if(allowance.lt(amountWei)){
-    log("İzin isteniyor…");
+    log("Requesting approval…");
     const tx = await tARC.approve(ADDR.Escrow, ethers.constants.MaxUint256);
     await tx.wait();
   }
@@ -188,47 +194,47 @@ async function doCreateDeal(){
   const beneficiary = document.getElementById('escrowBeneficiary').value.trim();
   const arbiter = document.getElementById('escrowArbiter').value.trim();
   const amt = document.getElementById('escrowAmount').value;
-  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
-  if(!ethers.utils.isAddress(beneficiary) || !ethers.utils.isAddress(arbiter)){ log("Geçerli adresler gir.", "err"); return; }
-  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  if(!account){ log("Connect your wallet first.", "err"); return; }
+  if(!ethers.utils.isAddress(beneficiary) || !ethers.utils.isAddress(arbiter)){ log("Enter valid addresses.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Enter a valid amount.", "err"); return; }
   try{
     const wei = toWei(amt);
     await ensureApproval(wei);
-    log("Anlaşma oluşturuluyor…");
+    log("Creating deal…");
     const tx = await escrow.createDeal(beneficiary, arbiter, wei);
     await tx.wait();
-    log("Anlaşma oluşturuldu.", "ok");
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+    log("Deal created.", "ok");
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 async function doDealCheck(){
   const id = document.getElementById('dealIdInput').value;
-  if(id === "" || id === null){ log("Anlaşma ID gir.", "err"); return; }
+  if(id === "" || id === null){ log("Enter a Deal ID.", "err"); return; }
   try{
     const d = await escrow.getDeal(id);
-    document.getElementById('dealStatusVal').textContent = fmt(d[3]) + " tARC — " + STATUS[d[4]];
-  }catch(e){ log("Sorgu başarısız: " + (e.reason || e.message || e), "err"); }
+    document.getElementById('dealStatusVal').textContent = fmt(d[3]) + " tARC · " + STATUS[d[4]];
+  }catch(e){ log("Query failed: " + (e.reason || e.message || e), "err"); }
 }
 async function doDealRelease(){
   const id = document.getElementById('dealIdInput').value;
-  if(id === "" || id === null){ log("Anlaşma ID gir.", "err"); return; }
+  if(id === "" || id === null){ log("Enter a Deal ID.", "err"); return; }
   try{
-    log("Serbest bırakılıyor…");
+    log("Releasing…");
     const tx = await escrow.release(id);
     await tx.wait();
-    log("Serbest bırakıldı.", "ok");
+    log("Released.", "ok");
     await doDealCheck();
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 async function doDealRefund(){
   const id = document.getElementById('dealIdInput').value;
-  if(id === "" || id === null){ log("Anlaşma ID gir.", "err"); return; }
+  if(id === "" || id === null){ log("Enter a Deal ID.", "err"); return; }
   try{
-    log("İade ediliyor…");
+    log("Refunding…");
     const tx = await escrow.refund(id);
     await tx.wait();
-    log("İade edildi.", "ok");
+    log("Refunded.", "ok");
     await doDealCheck();
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 document.getElementById('connectBtn').addEventListener('click', connect);
@@ -236,6 +242,15 @@ document.getElementById('btnCreateDeal').addEventListener('click', doCreateDeal)
 document.getElementById('btnDealCheck').addEventListener('click', doDealCheck);
 document.getElementById('btnDealRelease').addEventListener('click', doDealRelease);
 document.getElementById('btnDealRefund').addEventListener('click', doDealRefund);
+
+/* ---------- Auto-reconnect ---------- */
+(async function(){
+  if(!window.ethereum) return;
+  try{
+    const accs = await window.ethereum.request({ method: 'eth_accounts' });
+    if(accs && accs.length){ await connect(); }
+  }catch(e){ console.error(e); }
+})();
 </script>
 </body>
 </html>
