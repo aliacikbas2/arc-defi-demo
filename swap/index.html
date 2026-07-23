@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Swap — StableLab</title>
+<title>Swap · StableLab</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 <style>
   :root{
@@ -18,8 +18,11 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased; }
   .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px;}
-  a.back{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none; margin-bottom:20px; }
-  a.back:hover{ color:var(--primary); }
+  .brand-back{ display:inline-flex; align-items:baseline; gap:8px; text-decoration:none; margin-bottom:24px; }
+  .brand-back .logo{ font-family:var(--sans); font-weight:800; font-size:40px; color:var(--text); letter-spacing:-0.015em; }
+  .brand-back .logo .slash{ color:var(--primary); }
+  .brand-back .hint{ font-size:11px; color:var(--text-faint); font-weight:600; transition:color .15s; }
+  .brand-back:hover .hint{ color:var(--primary); }
 
   .hero{ margin-bottom:28px; }
   .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
@@ -80,46 +83,49 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../">← StableLab'a Dön</a>
+  <a class="brand-back" href="../">
+    <span class="logo">Stable<span class="slash">Lab</span></span>
+    <span class="hint">← Click for homepage</span>
+  </a>
 
   <div class="hero">
-    <div class="eyebrow">StableLab · Swap Modülü</div>
-    <h1>İki varlık arasında anlık takas</h1>
+    <div class="eyebrow">StableLab · Swap Module</div>
+    <h1>Instant swaps between two assets</h1>
     <div class="lede">
-      Swap, tARC ve tUSD arasında merkeziyetsiz bir havuz üzerinden anlık takas yapmanı sağlar. Fiyat, havuzdaki oranlara göre otomatik hesaplanır (x·y=k formülü) — küçük bir komisyonla (%0.3) likidite sağlayıcılar da kazanır.
+      Swap lets you exchange between tARC and tUSD instantly through a decentralized pool. The price is calculated automatically based on the pool's ratios (the x·y=k formula); a small fee (0.3%) also lets liquidity providers earn.
     </div>
   </div>
 
   <div class="usecase">
-    <b>Örnek senaryo:</b> Elinde tARC var ama tUSD'ye ihtiyacın var (ya da tam tersi). Bir aracıya gitmeden, doğrudan havuzdan anlık olarak takas yaparsın — fiyat şeffaf şekilde havuzun mevcut oranına göre hesaplanır, işlem saniyeler içinde tamamlanır.
+    <b>Example scenario:</b> You have tARC but need tUSD (or vice versa). Without going through an intermediary, you swap instantly, directly from the pool; the price is calculated transparently based on the pool's current ratio, and the transaction completes in seconds.
   </div>
 
   <div class="howcard">
-    <div class="howstep"><div class="num">01</div><div class="title">Yön seç</div><div class="desc">tARC → tUSD ya da tUSD → tARC.</div></div>
-    <div class="howstep"><div class="num">02</div><div class="title">Miktar gir</div><div class="desc">Ne kadar vereceğini yaz, karşılığı otomatik hesaplanır.</div></div>
-    <div class="howstep"><div class="num">03</div><div class="title">Takas et</div><div class="desc">İşlem anında gerçekleşir, karşı varlık cüzdanına geçer.</div></div>
+    <div class="howstep"><div class="num">01</div><div class="title">Choose direction</div><div class="desc">tARC → tUSD or tUSD → tARC.</div></div>
+    <div class="howstep"><div class="num">02</div><div class="title">Enter amount</div><div class="desc">Type how much you'll give, the counterpart is calculated automatically.</div></div>
+    <div class="howstep"><div class="num">03</div><div class="title">Swap</div><div class="desc">The transaction happens instantly, the counterpart asset lands in your wallet.</div></div>
   </div>
 
   <div style="margin-bottom:24px;">
-    <button id="connectBtn">Cüzdanı Bağla</button>
+    <button id="connectBtn">Connect Wallet</button>
     <div class="acct" id="acctInfo"></div>
   </div>
 
   <div class="section">
-    <div class="head">Takas Et</div>
+    <div class="head">Swap</div>
     <div class="body">
       <div class="toggle">
         <button id="dirAtoB" class="active">tARC → tUSD</button>
         <button id="dirBtoA">tUSD → tARC</button>
       </div>
       <div class="row">
-        <input type="number" id="swapAmt" placeholder="Verilecek miktar" />
-        <button class="act primary" id="btnSwap">Takas Et</button>
+        <input type="number" id="swapAmt" placeholder="Amount to give" />
+        <button class="act primary" id="btnSwap">Swap</button>
       </div>
-      <div class="stat-line"><span class="k">Alacağın miktar</span><span class="v" id="swapPreview">—</span></div>
-      <div class="stat-line"><span class="k">Havuzdaki tARC</span><span class="v" id="swReserveA">—</span></div>
-      <div class="stat-line"><span class="k">Havuzdaki tUSD</span><span class="v" id="swReserveB">—</span></div>
-      <div class="hint">Takastan önce ilgili token için harcama izni otomatik istenir.</div>
+      <div class="stat-line"><span class="k">Amount you'll receive</span><span class="v" id="swapPreview">—</span></div>
+      <div class="stat-line"><span class="k">Pool tARC</span><span class="v" id="swReserveA">—</span></div>
+      <div class="stat-line"><span class="k">Pool tUSD</span><span class="v" id="swReserveB">—</span></div>
+      <div class="hint">Before swapping, spending approval for the relevant token is requested automatically.</div>
     </div>
   </div>
 </div>
@@ -155,11 +161,11 @@ function log(msg, type){
   clearTimeout(window.__t);
   window.__t = setTimeout(()=>{ el.className=''; }, 6000);
 }
-function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('tr-TR', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
+function fmt(bn){ try{ return Number(ethers.utils.formatUnits(bn, 18)).toLocaleString('en-US', {maximumFractionDigits: 4}); }catch(e){ return "—"; } }
 function toWei(v){ return ethers.utils.parseUnits(String(v || "0"), 18); }
 
 async function connect(){
-  if(!window.ethereum){ log("Cüzdan uzantısı bulunamadı (Rabby/MetaMask).", "err"); return; }
+  if(!window.ethereum){ log("No wallet extension found (Rabby/MetaMask).", "err"); return; }
   try{
     provider = new ethers.providers.Web3Provider(window.ethereum, "any");
     await provider.send("eth_requestAccounts", []);
@@ -169,10 +175,10 @@ async function connect(){
     tARC = new ethers.Contract(ADDR.tARC, ERC20_ABI, signer);
     tUSD = new ethers.Contract(ADDR.tUSD, ERC20_ABI, signer);
     swap = new ethers.Contract(ADDR.Swap, SWAP_ABI, signer);
-    document.getElementById('connectBtn').textContent = "Bağlandı";
+    document.getElementById('connectBtn').textContent = "Connected";
     document.getElementById('connectBtn').disabled = true;
     await refreshReserves();
-  }catch(e){ log("Bağlantı hatası: " + (e.message || e), "err"); }
+  }catch(e){ log("Connection error: " + (e.message || e), "err"); }
 }
 
 async function refreshReserves(){
@@ -216,7 +222,7 @@ function updatePreview(){
 async function ensureApproval(token, spender, amountWei){
   const allowance = await token.allowance(account, spender);
   if(allowance.lt(amountWei)){
-    log("İzin isteniyor…");
+    log("Requesting approval…");
     const tx = await token.approve(spender, ethers.constants.MaxUint256);
     await tx.wait();
   }
@@ -224,24 +230,24 @@ async function ensureApproval(token, spender, amountWei){
 
 async function doSwap(){
   const amt = document.getElementById('swapAmt').value;
-  if(!account){ log("Önce cüzdanı bağla.", "err"); return; }
-  if(!amt || Number(amt) <= 0){ log("Geçerli bir miktar gir.", "err"); return; }
+  if(!account){ log("Connect your wallet first.", "err"); return; }
+  if(!amt || Number(amt) <= 0){ log("Enter a valid amount.", "err"); return; }
   try{
     const wei = toWei(amt);
     if(swapDir === 'AtoB'){
       await ensureApproval(tARC, ADDR.Swap, wei);
-      log("Takas gönderiliyor (tARC → tUSD)…");
+      log("Sending swap (tARC → tUSD)…");
       const tx = await swap.swapAforB(wei);
       await tx.wait();
     } else {
       await ensureApproval(tUSD, ADDR.Swap, wei);
-      log("Takas gönderiliyor (tUSD → tARC)…");
+      log("Sending swap (tUSD → tARC)…");
       const tx = await swap.swapBforA(wei);
       await tx.wait();
     }
-    log("Takas başarılı.", "ok");
+    log("Swap successful.", "ok");
     await refreshReserves();
-  }catch(e){ log("İşlem başarısız: " + (e.reason || e.message || e), "err"); }
+  }catch(e){ log("Transaction failed: " + (e.reason || e.message || e), "err"); }
 }
 
 document.getElementById('connectBtn').addEventListener('click', connect);
@@ -250,6 +256,15 @@ document.getElementById('dirAtoB').addEventListener('click', () => setDir('AtoB'
 document.getElementById('dirBtoA').addEventListener('click', () => setDir('BtoA'));
 document.getElementById('swapAmt').addEventListener('input', updatePreview);
 setInterval(refreshReserves, 20000);
+
+/* ---------- Auto-reconnect ---------- */
+(async function(){
+  if(!window.ethereum) return;
+  try{
+    const accs = await window.ethereum.request({ method: 'eth_accounts' });
+    if(accs && accs.length){ await connect(); }
+  }catch(e){ console.error(e); }
+})();
 </script>
 </body>
 </html>
