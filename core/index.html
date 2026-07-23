@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Temel Araçlar — StableLab</title>
+<title>Core Tools · StableLab</title>
 <style>
   :root{
     --bg:#f5f7fa; --surface:#ffffff; --surface-alt:#eef2f8; --border:#dde3ec;
@@ -16,8 +16,11 @@
   html,body{margin:0;padding:0;}
   body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; }
   .wrap{max-width:760px;margin:0 auto;padding:24px 20px 80px;}
-  a.back{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--text-mute); text-decoration:none; margin-bottom:20px; }
-  a.back:hover{ color:var(--primary); }
+  .brand-back{ display:inline-flex; align-items:baseline; gap:8px; text-decoration:none; margin-bottom:24px; }
+  .brand-back .logo{ font-family:var(--sans); font-weight:800; font-size:40px; color:var(--text); letter-spacing:-0.015em; }
+  .brand-back .logo .slash{ color:var(--primary); }
+  .brand-back .hint{ font-size:11px; color:var(--text-faint); font-weight:600; transition:color .15s; }
+  .brand-back:hover .hint{ color:var(--primary); }
   .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
   h1{ font-size:32px; font-weight:800; margin:0 0 10px; letter-spacing:-0.02em; }
   .lede{ font-size:14.5px; color:var(--text-mute); max-width:60ch; line-height:1.65; margin-bottom:32px; }
@@ -35,19 +38,22 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../">← StableLab'a Dön</a>
+  <a class="brand-back" href="../">
+    <span class="logo">Stable<span class="slash">Lab</span></span>
+    <span class="hint">← Click for homepage</span>
+  </a>
 
-  <div class="eyebrow">StableLab · Temel Araçlar</div>
-  <h1>DeFi'nin üç temel yapı taşı</h1>
+  <div class="eyebrow">StableLab · Core Tools</div>
+  <h1>DeFi's three core building blocks</h1>
   <div class="lede">
-    Stake ederek zamanla ödül kazan, teminatınla likidite al, ya da iki varlık arasında anlık takas yap — bunlar herhangi bir DeFi ekosisteminin omurgasını oluşturan, en çok kullanılan üç araç.
+    Earn rewards over time by staking, get liquidity against your collateral, or swap instantly between two assets. These are the three most-used tools that form the backbone of any DeFi ecosystem.
   </div>
 
   <a class="card" href="../staking/">
     <div class="card-emoji">🪙</div>
     <div>
       <div class="card-title">Staking</div>
-      <div class="card-desc">tARC'ını kilitle, saniye başına sabit bir oranda ödül kazan.</div>
+      <div class="card-desc">Lock your tARC, earn a reward at a fixed rate every second.</div>
     </div>
     <div class="card-arrow">→</div>
   </a>
@@ -56,7 +62,7 @@
     <div class="card-emoji">🏦</div>
     <div>
       <div class="card-title">Lending</div>
-      <div class="card-desc">Varlığını satmadan, teminat göstererek anında likidite al.</div>
+      <div class="card-desc">Get instant liquidity by posting collateral, without selling your asset.</div>
     </div>
     <div class="card-arrow">→</div>
   </a>
@@ -65,7 +71,7 @@
     <div class="card-emoji">🔁</div>
     <div>
       <div class="card-title">Swap</div>
-      <div class="card-desc">tARC ve tUSD arasında, havuz üzerinden anlık ve şeffaf takas yap.</div>
+      <div class="card-desc">Swap instantly and transparently between tARC and tUSD through a pool.</div>
     </div>
     <div class="card-arrow">→</div>
   </a>
