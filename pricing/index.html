@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pricing · StableLab</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --surface:#ffffff; --surface-alt:#eef2f8; --border:#dde3ec;
+    --text:#0f1b2d; --text-mute:#5b6b82; --text-faint:#8a97ab;
+    --primary:#2f5fe0; --primary-dark:#1e3fa8; --primary-soft:#e8edfc;
+    --ok:#0f9d58; --radius:10px;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{ background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; line-height:1.5; }
+  .wrap{max-width:800px;margin:0 auto;padding:24px 20px 80px;}
+  .brand-back{ display:inline-flex; align-items:baseline; gap:8px; text-decoration:none; margin-bottom:24px; }
+  .brand-back .logo{ font-family:var(--sans); font-weight:800; font-size:40px; color:var(--text); letter-spacing:-0.015em; }
+  .brand-back .logo .slash{ color:var(--primary); }
+  .brand-back .hint{ font-size:11px; color:var(--text-faint); font-weight:600; transition:color .15s; }
+  .brand-back:hover .hint{ color:var(--primary); }
+
+  .eyebrow{ font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); margin-bottom:8px; }
+  h1{ font-size:34px; font-weight:800; margin:0 0 14px; letter-spacing:-0.02em; }
+  .lede{ font-size:15px; color:var(--text-mute); max-width:65ch; line-height:1.7; margin-bottom:36px; }
+
+  .free-banner{
+    background:linear-gradient(120deg, var(--ok) 0%, #0c7a45 100%); color:#fff; border-radius:var(--radius);
+    padding:22px 26px; margin-bottom:32px; box-shadow:0 6px 18px rgba(15,157,88,0.25);
+  }
+  .free-banner .fb-title{ font-size:18px; font-weight:800; margin-bottom:6px; }
+  .free-banner .fb-desc{ font-size:13px; opacity:.95; line-height:1.6; max-width:60ch; }
+
+  .fee-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+  .fee-card{
+    border:1px solid var(--border); border-radius:var(--radius); background:var(--surface);
+    padding:22px; box-shadow:0 1px 2px rgba(15,27,45,0.04);
+  }
+  .fee-card-title{ font-weight:800; font-size:16px; margin-bottom:6px; }
+  .fee-pct{ font-family:var(--mono); font-size:30px; font-weight:700; color:var(--primary-dark); margin:8px 0; }
+  .fee-desc{ font-size:12.5px; color:var(--text-mute); line-height:1.55; }
+
+  .note{
+    background:var(--primary-soft); border:1px solid #d3ddfa; border-radius:var(--radius);
+    padding:18px 22px; font-size:13px; color:#33447a; line-height:1.65; margin-top:32px;
+  }
+  .note b{ color:var(--primary-dark); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand-back" href="../">
+    <span class="logo">Stable<span class="slash">Lab</span></span>
+    <span class="hint">← Click for homepage</span>
+  </a>
+
+  <div class="eyebrow">Pricing</div>
+  <h1>Transparency matters</h1>
+  <div class="lede">
+    No hidden fees. Here's the real fee structure for each module; all of it is defined directly in the smart contracts' own code, unchangeable.
+  </div>
+
+  <div class="free-banner">
+    <div class="fb-title">Core Tools: Completely Free</div>
+    <div class="fb-desc">The platform takes no fee whatsoever on Staking, Lending, or Swap. Swap only has a 0.3% fee that goes to liquidity providers in the pool; this share goes to liquidity providers, not the platform.</div>
+  </div>
+
+  <div class="fee-grid">
+    <div class="fee-card">
+      <div class="fee-card-title">💸 FlowPay</div>
+      <div class="fee-pct">0.25%</div>
+      <div class="fee-desc">Taken once from the total amount as a platform fee when a stream is created.</div>
+    </div>
+    <div class="fee-card">
+      <div class="fee-card-title">🔒 TrustLock</div>
+      <div class="fee-pct">1%</div>
+      <div class="fee-desc">Taken when a deal is released. No fee at all on refunds.</div>
+    </div>
+    <div class="fee-card">
+      <div class="fee-card-title">🛡️ VaultGuard</div>
+      <div class="fee-pct">0.2%</div>
+      <div class="fee-desc">Taken when enough confirmations are gathered and the transfer executes automatically.</div>
+    </div>
+    <div class="fee-card">
+      <div class="fee-card-title">🧾 VeloPay</div>
+      <div class="fee-pct">0.5%</div>
+      <div class="fee-desc">Taken when an invoice is repaid. The remaining 2.5% spread goes to liquidity providers.</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Why do we charge fees?</b> These small commissions exist to show that StableLab can operate like a real product; a concrete example of how a sustainable platform could work. There's no real revenue on testnet, but the mechanism itself is real and functional.
+  </div>
+</div>
+</body>
+</html>
